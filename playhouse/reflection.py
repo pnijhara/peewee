@@ -593,9 +593,9 @@ class Introspector(object):
 
             # Collect sets of all the column names as well as all the
             # foreign-key column names.
-            lower_col_names = set(column_name.lower()
-                                  for column_name in table_columns)
-            fks = set(fk_col.column for fk_col in foreign_keys[table])
+            lower_col_names = {column_name.lower()
+                                  for column_name in table_columns}
+            fks = {fk_col.column for fk_col in foreign_keys[table]}
 
             for col_name, column in table_columns.items():
                 if literal_column_names:
