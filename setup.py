@@ -21,8 +21,6 @@ extension_support = True  # Assume we are building C extensions.
 # (so long as we're running on CPython).
 try:
     from Cython.Build import cythonize
-    from Cython.Distutils import build_ext
-    from Cython.Distutils.extension import Extension
 except ImportError:
     cython_installed = False
 else:
