@@ -37,7 +37,7 @@ class TestCoerce(ModelTestCase):
     requires = [IntModel]
 
     def test_coerce(self):
-        i = IntModel.create(value='1337', value_null=3.14159)
+        i = IntModel.create(value="1337", value_null=3.14159)
         i_db = IntModel.get(IntModel.id == i.id)
         self.assertEqual(i_db.value, 1337)
         self.assertEqual(i_db.value_null, 3)
@@ -114,11 +114,10 @@ class TestIntegerField(ModelTestCase):
         i1 = IntModel.create(value=1)
         i2 = IntModel.create(value=2, value_null=20)
 
-        vals = [(i.value, i.value_null)
-                for i in IntModel.select().order_by(IntModel.value)]
-        self.assertEqual(vals, [
-            (1, None),
-            (2, 20)])
+        vals = [
+            (i.value, i.value_null) for i in IntModel.select().order_by(IntModel.value)
+        ]
+        self.assertEqual(vals, [(1, None), (2, 20)])
 
 
 class FloatModel(TestModel):
@@ -134,31 +133,34 @@ class TestFloatField(ModelTestCase):
         f2 = FloatModel.create(value=3.14, value_null=0.12)
 
         query = FloatModel.select().order_by(FloatModel.id)
-        self.assertEqual([(f.value, f.value_null) for f in query],
-                         [(1.23, None), (3.14, 0.12)])
+        self.assertEqual(
+            [(f.value, f.value_null) for f in query], [(1.23, None), (3.14, 0.12)]
+        )
 
 
 class DecimalModel(TestModel):
     value = DecimalField(decimal_places=2, auto_round=True)
-    value_up = DecimalField(decimal_places=2, auto_round=True,
-                            rounding=ROUND_UP, null=True)
+    value_up = DecimalField(
+        decimal_places=2, auto_round=True, rounding=ROUND_UP, null=True
+    )
 
 
 class TestDecimalField(ModelTestCase):
     requires = [DecimalModel]
 
     def test_decimal_field(self):
-        d1 = DecimalModel.create(value=D('3'))
-        d2 = DecimalModel.create(value=D('100.33'))
+        d1 = DecimalModel.create(value=D("3"))
+        d2 = DecimalModel.create(value=D("100.33"))
 
-        self.assertEqual(sorted(d.value for d in DecimalModel.select()),
-                         [D('3'), D('100.33')])
+        self.assertEqual(
+            sorted(d.value for d in DecimalModel.select()), [D("3"), D("100.33")]
+        )
 
     def test_decimal_rounding(self):
-        d = DecimalModel.create(value=D('1.2345'), value_up=D('1.2345'))
+        d = DecimalModel.create(value=D("1.2345"), value_up=D("1.2345"))
         d_db = DecimalModel.get(DecimalModel.id == d.id)
-        self.assertEqual(d_db.value, D('1.23'))
-        self.assertEqual(d_db.value_up, D('1.24'))
+        self.assertEqual(d_db.value, D("1.23"))
+        self.assertEqual(d_db.value_up, D("1.24"))
 
 
 class BoolModel(TestModel):
@@ -170,15 +172,12 @@ class TestBooleanField(ModelTestCase):
     requires = [BoolModel]
 
     def test_boolean_field(self):
-        BoolModel.create(value=True, name='t')
-        BoolModel.create(value=False, name='f')
-        BoolModel.create(value=None, name='n')
+        BoolModel.create(value=True, name="t")
+        BoolModel.create(value=False, name="f")
+        BoolModel.create(value=None, name="n")
 
         vals = sorted((b.name, b.value) for b in BoolModel.select())
-        self.assertEqual(vals, [
-            ('f', False),
-            ('n', None),
-            ('t', True)])
+        self.assertEqual(vals, [("f", False), ("n", None), ("t", True)])
 
 
 class DateModel(TestModel):
@@ -188,9 +187,7 @@ class DateModel(TestModel):
 
 
 class CustomDateTimeModel(TestModel):
-    date_time = DateTimeField(formats=[
-        '%m/%d/%Y %I:%M %p',
-        '%Y-%m-%d %H:%M:%S'])
+    date_time = DateTimeField(formats=["%m/%d/%Y %I:%M %p", "%Y-%m-%d %H:%M:%S"])
 
 
 class TestDateFields(ModelTestCase):
@@ -198,10 +195,9 @@ class TestDateFields(ModelTestCase):
 
     @requires_models(CustomDateTimeModel)
     def test_date_time_custom_format(self):
-        cdtm = CustomDateTimeModel.create(date_time='01/02/2003 01:37 PM')
+        cdtm = CustomDateTimeModel.create(date_time="01/02/2003 01:37 PM")
         cdtm_db = CustomDateTimeModel[cdtm.id]
-        self.assertEqual(cdtm_db.date_time,
-                         datetime.datetime(2003, 1, 2, 13, 37, 0))
+        self.assertEqual(cdtm_db.date_time, datetime.datetime(2003, 1, 2, 13, 37, 0))
 
     def test_date_fields(self):
         dt1 = datetime.datetime(2011, 1, 2, 11, 12, 13, 54321)
@@ -231,35 +227,55 @@ class TestDateFields(ModelTestCase):
         dm = DateModel.create(
             date_time=datetime.datetime(2011, 1, 2, 11, 12, 13, 54321),
             date=datetime.date(2012, 2, 3),
-            time=datetime.time(3, 13, 37))
-        query = (DateModel
-                 .select(DateModel.date_time.year, DateModel.date_time.month,
-                         DateModel.date_time.day, DateModel.date_time.hour,
-                         DateModel.date_time.minute,
-                         DateModel.date_time.second, DateModel.date.year,
-                         DateModel.date.month, DateModel.date.day,
-                         DateModel.time.hour, DateModel.time.minute,
-                         DateModel.time.second)
-                 .tuples())
+            time=datetime.time(3, 13, 37),
+        )
+        query = DateModel.select(
+            DateModel.date_time.year,
+            DateModel.date_time.month,
+            DateModel.date_time.day,
+            DateModel.date_time.hour,
+            DateModel.date_time.minute,
+            DateModel.date_time.second,
+            DateModel.date.year,
+            DateModel.date.month,
+            DateModel.date.day,
+            DateModel.time.hour,
+            DateModel.time.minute,
+            DateModel.time.second,
+        ).tuples()
 
-        row, = query
+        (row,) = query
         if IS_SQLITE or IS_MYSQL:
-            self.assertEqual(row,
-                             (2011, 1, 2, 11, 12, 13, 2012, 2, 3, 3, 13, 37))
+            self.assertEqual(row, (2011, 1, 2, 11, 12, 13, 2012, 2, 3, 3, 13, 37))
         else:
-            self.assertEqual(row, (
-                2011., 1., 2., 11., 12., 13.054321, 2012., 2., 3., 3., 13.,
-                37.))
+            self.assertEqual(
+                row,
+                (
+                    2011.0,
+                    1.0,
+                    2.0,
+                    11.0,
+                    12.0,
+                    13.054321,
+                    2012.0,
+                    2.0,
+                    3.0,
+                    3.0,
+                    13.0,
+                    37.0,
+                ),
+            )
 
     def test_truncate_date(self):
         dm = DateModel.create(
             date_time=datetime.datetime(2001, 2, 3, 4, 5, 6, 7),
-            date=datetime.date(2002, 3, 4))
+            date=datetime.date(2002, 3, 4),
+        )
 
         accum = []
-        for p in ('year', 'month', 'day', 'hour', 'minute', 'second'):
+        for p in ("year", "month", "day", "hour", "minute", "second"):
             accum.append(DateModel.date_time.truncate(p))
-        for p in ('year', 'month', 'day'):
+        for p in ("year", "month", "day"):
             accum.append(DateModel.date.truncate(p))
 
         query = DateModel.select(*accum).tuples()
@@ -269,16 +285,20 @@ class TestDateFields(ModelTestCase):
         if IS_POSTGRESQL or IS_CRDB:
             data = [dt.replace(tzinfo=None) for dt in data]
 
-        self.assertEqual(data, [
-            datetime.datetime(2001, 1, 1, 0, 0, 0),
-            datetime.datetime(2001, 2, 1, 0, 0, 0),
-            datetime.datetime(2001, 2, 3, 0, 0, 0),
-            datetime.datetime(2001, 2, 3, 4, 0, 0),
-            datetime.datetime(2001, 2, 3, 4, 5, 0),
-            datetime.datetime(2001, 2, 3, 4, 5, 6),
-            datetime.datetime(2002, 1, 1, 0, 0, 0),
-            datetime.datetime(2002, 3, 1, 0, 0, 0),
-            datetime.datetime(2002, 3, 4, 0, 0, 0)])
+        self.assertEqual(
+            data,
+            [
+                datetime.datetime(2001, 1, 1, 0, 0, 0),
+                datetime.datetime(2001, 2, 1, 0, 0, 0),
+                datetime.datetime(2001, 2, 3, 0, 0, 0),
+                datetime.datetime(2001, 2, 3, 4, 0, 0),
+                datetime.datetime(2001, 2, 3, 4, 5, 0),
+                datetime.datetime(2001, 2, 3, 4, 5, 6),
+                datetime.datetime(2002, 1, 1, 0, 0, 0),
+                datetime.datetime(2002, 3, 1, 0, 0, 0),
+                datetime.datetime(2002, 3, 4, 0, 0, 0),
+            ],
+        )
 
     def test_to_timestamp(self):
         dt = datetime.datetime(2019, 1, 2, 3, 4, 5)
@@ -291,20 +311,21 @@ class TestDateFields(ModelTestCase):
 
         query = DateModel.select(
             DateModel.id,
-            DateModel.date_time.to_timestamp().alias('dt_ts'),
-            DateModel.date.to_timestamp().alias('dt2_ts'))
+            DateModel.date_time.to_timestamp().alias("dt_ts"),
+            DateModel.date.to_timestamp().alias("dt2_ts"),
+        )
         obj = query.get()
 
         self.assertEqual(obj.dt_ts, ts)
         self.assertEqual(obj.dt2_ts, ts2)
 
         ts3 = ts + 86400
-        query = (DateModel.select()
-                 .where((DateModel.date_time.to_timestamp() + 86400) < ts3))
+        query = DateModel.select().where(
+            (DateModel.date_time.to_timestamp() + 86400) < ts3
+        )
         self.assertRaises(DateModel.DoesNotExist, query.get)
 
-        query = (DateModel.select()
-                 .where((DateModel.date.to_timestamp() + 86400) > ts3))
+        query = DateModel.select().where((DateModel.date.to_timestamp() + 86400) > ts3)
         self.assertEqual(query.get().id, obj.id)
 
     def test_distinct_date_part(self):
@@ -313,11 +334,10 @@ class TestDateFields(ModelTestCase):
             for j in range(i + 1):
                 DateModel.create(date=datetime.date(year, i + 1, 1))
 
-        query = (DateModel
-                 .select(DateModel.date.year.distinct())
-                 .order_by(DateModel.date.year))
-        self.assertEqual([year for year, in query.tuples()],
-                         [1980, 1990, 2000, 2010])
+        query = DateModel.select(DateModel.date.year.distinct()).order_by(
+            DateModel.date.year
+        )
+        self.assertEqual([year for year, in query.tuples()], [1980, 1990, 2000, 2010])
 
 
 class U2(TestModel):
@@ -325,7 +345,7 @@ class U2(TestModel):
 
 
 class T2(TestModel):
-    user = ForeignKeyField(U2, backref='tweets', on_delete='CASCADE')
+    user = ForeignKeyField(U2, backref="tweets", on_delete="CASCADE")
     content = TextField()
 
 
@@ -333,47 +353,50 @@ class TestForeignKeyField(ModelTestCase):
     requires = [User, Tweet]
 
     def test_set_fk(self):
-        huey = User.create(username='huey')
-        zaizee = User.create(username='zaizee')
+        huey = User.create(username="huey")
+        zaizee = User.create(username="zaizee")
 
         # Test resolution of attributes after creation does not trigger SELECT.
         with self.assertQueryCount(1):
-            tweet = Tweet.create(content='meow', user=huey)
-            self.assertEqual(tweet.user.username, 'huey')
+            tweet = Tweet.create(content="meow", user=huey)
+            self.assertEqual(tweet.user.username, "huey")
 
         # Test we can set to an integer, in which case a query will occur.
         with self.assertQueryCount(2):
-            tweet = Tweet.create(content='purr', user=zaizee.id)
-            self.assertEqual(tweet.user.username, 'zaizee')
+            tweet = Tweet.create(content="purr", user=zaizee.id)
+            self.assertEqual(tweet.user.username, "zaizee")
 
         # Test we can set the ID accessor directly.
         with self.assertQueryCount(2):
-            tweet = Tweet.create(content='hiss', user_id=huey.id)
-            self.assertEqual(tweet.user.username, 'huey')
+            tweet = Tweet.create(content="hiss", user_id=huey.id)
+            self.assertEqual(tweet.user.username, "huey")
 
     def test_follow_attributes(self):
-        huey = User.create(username='huey')
-        Tweet.create(content='meow', user=huey)
-        Tweet.create(content='hiss', user=huey)
+        huey = User.create(username="huey")
+        Tweet.create(content="meow", user=huey)
+        Tweet.create(content="hiss", user=huey)
 
         with self.assertQueryCount(1):
-            query = (Tweet
-                     .select(Tweet.content, Tweet.user.username)
-                     .join(User)
-                     .order_by(Tweet.content))
-            self.assertEqual([(tweet.content, tweet.user.username)
-                              for tweet in query],
-                             [('hiss', 'huey'), ('meow', 'huey')])
+            query = (
+                Tweet.select(Tweet.content, Tweet.user.username)
+                .join(User)
+                .order_by(Tweet.content)
+            )
+            self.assertEqual(
+                [(tweet.content, tweet.user.username) for tweet in query],
+                [("hiss", "huey"), ("meow", "huey")],
+            )
 
         self.assertRaises(AttributeError, lambda: Tweet.user.foo)
 
     def test_disable_backref(self):
         class Person(TestModel):
             pass
-        class Pet(TestModel):
-            owner = ForeignKeyField(Person, backref='!')
 
-        self.assertEqual(Pet.owner.backref, '!')
+        class Pet(TestModel):
+            owner = ForeignKeyField(Person, backref="!")
+
+        self.assertEqual(Pet.owner.backref, "!")
 
         # No attribute/accessor is added to the related model.
         self.assertRaises(AttributeError, lambda: Person.pet_set)
@@ -387,61 +410,64 @@ class TestForeignKeyField(ModelTestCase):
             self.database.foreign_keys = 1
 
         with self.database.atomic():
-            for username in ('u1', 'u2', 'u3'):
+            for username in ("u1", "u2", "u3"):
                 user = U2.create(username=username)
                 for i in range(3):
-                    T2.create(user=user, content='%s-%s' % (username, i))
+                    T2.create(user=user, content="%s-%s" % (username, i))
 
         self.assertEqual(T2.select().count(), 9)
-        U2.delete().where(U2.username == 'u2').execute()
+        U2.delete().where(U2.username == "u2").execute()
         self.assertEqual(T2.select().count(), 6)
 
-        query = (U2
-                 .select(U2.username, fn.COUNT(T2.id).alias('ct'))
-                 .join(T2, JOIN.LEFT_OUTER)
-                 .group_by(U2.username)
-                 .order_by(U2.username))
-        self.assertEqual([(u.username, u.ct) for u in query], [
-            ('u1', 3),
-            ('u3', 3)])
+        query = (
+            U2.select(U2.username, fn.COUNT(T2.id).alias("ct"))
+            .join(T2, JOIN.LEFT_OUTER)
+            .group_by(U2.username)
+            .order_by(U2.username)
+        )
+        self.assertEqual([(u.username, u.ct) for u in query], [("u1", 3), ("u3", 3)])
 
 
 class M1(TestModel):
     name = CharField(primary_key=True)
-    m2 = DeferredForeignKey('M2', deferrable='INITIALLY DEFERRED',
-                            on_delete='CASCADE')
+    m2 = DeferredForeignKey("M2", deferrable="INITIALLY DEFERRED", on_delete="CASCADE")
+
 
 class M2(TestModel):
     name = CharField(primary_key=True)
-    m1 = ForeignKeyField(M1, deferrable='INITIALLY DEFERRED',
-                         on_delete='CASCADE')
+    m1 = ForeignKeyField(M1, deferrable="INITIALLY DEFERRED", on_delete="CASCADE")
 
 
 @skip_if(IS_MYSQL)
-@skip_if(IS_CRDB, 'crdb does not support deferred foreign-key constraints')
+@skip_if(IS_CRDB, "crdb does not support deferred foreign-key constraints")
 class TestDeferredForeignKey(ModelTestCase):
     requires = [M1, M2]
 
     def test_deferred_foreign_key(self):
         with self.database.atomic():
-            m1 = M1.create(name='m1', m2='m2')
-            m2 = M2.create(name='m2', m1='m1')
+            m1 = M1.create(name="m1", m2="m2")
+            m2 = M2.create(name="m2", m1="m1")
 
-        m1_db = M1.get(M1.name == 'm1')
-        self.assertEqual(m1_db.m2.name, 'm2')
+        m1_db = M1.get(M1.name == "m1")
+        self.assertEqual(m1_db.m2.name, "m2")
 
-        m2_db = M2.get(M2.name == 'm2')
-        self.assertEqual(m2_db.m1.name, 'm1')
+        m2_db = M2.get(M2.name == "m2")
+        self.assertEqual(m2_db.m1.name, "m1")
 
 
 class TestDeferredForeignKeyResolution(ModelTestCase):
     def test_unresolved_deferred_fk(self):
         class Photo(Model):
-            album = DeferredForeignKey('Album', column_name='id_album')
+            album = DeferredForeignKey("Album", column_name="id_album")
+
             class Meta:
                 database = get_in_memory_db()
-        self.assertSQL(Photo.select(), (
-            'SELECT "t1"."id", "t1"."id_album" FROM "photo" AS "t1"'), [])
+
+        self.assertSQL(
+            Photo.select(),
+            ('SELECT "t1"."id", "t1"."id_album" FROM "photo" AS "t1"'),
+            [],
+        )
 
     def test_deferred_foreign_key_resolution(self):
         class Base(Model):
@@ -449,51 +475,84 @@ class TestDeferredForeignKeyResolution(ModelTestCase):
                 database = get_in_memory_db()
 
         class Photo(Base):
-            album = DeferredForeignKey('Album', column_name='id_album',
-                                       null=False, backref='pictures')
-            alt_album = DeferredForeignKey('Album', column_name='id_Alt_album',
-                                           field='alt_id', backref='alt_pix',
-                                           null=True)
+            album = DeferredForeignKey(
+                "Album", column_name="id_album", null=False, backref="pictures"
+            )
+            alt_album = DeferredForeignKey(
+                "Album",
+                column_name="id_Alt_album",
+                field="alt_id",
+                backref="alt_pix",
+                null=True,
+            )
 
         class Album(Base):
             name = TextField()
-            alt_id = IntegerField(column_name='_Alt_id')
+            alt_id = IntegerField(column_name="_Alt_id")
 
         self.assertTrue(Photo.album.rel_model is Album)
         self.assertTrue(Photo.album.rel_field is Album.id)
-        self.assertEqual(Photo.album.column_name, 'id_album')
+        self.assertEqual(Photo.album.column_name, "id_album")
         self.assertFalse(Photo.album.null)
 
         self.assertTrue(Photo.alt_album.rel_model is Album)
         self.assertTrue(Photo.alt_album.rel_field is Album.alt_id)
-        self.assertEqual(Photo.alt_album.column_name, 'id_Alt_album')
+        self.assertEqual(Photo.alt_album.column_name, "id_Alt_album")
         self.assertTrue(Photo.alt_album.null)
 
-        self.assertSQL(Photo._schema._create_table(), (
-            'CREATE TABLE IF NOT EXISTS "photo" ('
-            '"id" INTEGER NOT NULL PRIMARY KEY, '
-            '"id_album" INTEGER NOT NULL, '
-            '"id_Alt_album" INTEGER)'), [])
+        self.assertSQL(
+            Photo._schema._create_table(),
+            (
+                'CREATE TABLE IF NOT EXISTS "photo" ('
+                '"id" INTEGER NOT NULL PRIMARY KEY, '
+                '"id_album" INTEGER NOT NULL, '
+                '"id_Alt_album" INTEGER)'
+            ),
+            [],
+        )
 
-        self.assertSQL(Photo._schema._create_foreign_key(Photo.album), (
-            'ALTER TABLE "photo" ADD CONSTRAINT "fk_photo_id_album_refs_album"'
-            ' FOREIGN KEY ("id_album") REFERENCES "album" ("id")'))
-        self.assertSQL(Photo._schema._create_foreign_key(Photo.alt_album), (
-            'ALTER TABLE "photo" ADD CONSTRAINT '
-            '"fk_photo_id_Alt_album_refs_album"'
-            ' FOREIGN KEY ("id_Alt_album") REFERENCES "album" ("_Alt_id")'))
+        self.assertSQL(
+            Photo._schema._create_foreign_key(Photo.album),
+            (
+                'ALTER TABLE "photo" ADD CONSTRAINT "fk_photo_id_album_refs_album"'
+                ' FOREIGN KEY ("id_album") REFERENCES "album" ("id")'
+            ),
+        )
+        self.assertSQL(
+            Photo._schema._create_foreign_key(Photo.alt_album),
+            (
+                'ALTER TABLE "photo" ADD CONSTRAINT '
+                '"fk_photo_id_Alt_album_refs_album"'
+                ' FOREIGN KEY ("id_Alt_album") REFERENCES "album" ("_Alt_id")'
+            ),
+        )
 
-        self.assertSQL(Photo.select(), (
-            'SELECT "t1"."id", "t1"."id_album", "t1"."id_Alt_album" '
-            'FROM "photo" AS "t1"'), [])
+        self.assertSQL(
+            Photo.select(),
+            (
+                'SELECT "t1"."id", "t1"."id_album", "t1"."id_Alt_album" '
+                'FROM "photo" AS "t1"'
+            ),
+            [],
+        )
 
         a = Album(id=3, alt_id=4)
-        self.assertSQL(a.pictures, (
-            'SELECT "t1"."id", "t1"."id_album", "t1"."id_Alt_album" '
-            'FROM "photo" AS "t1" WHERE ("t1"."id_album" = ?)'), [3])
-        self.assertSQL(a.alt_pix, (
-            'SELECT "t1"."id", "t1"."id_album", "t1"."id_Alt_album" '
-            'FROM "photo" AS "t1" WHERE ("t1"."id_Alt_album" = ?)'), [4])
+        self.assertSQL(
+            a.pictures,
+            (
+                'SELECT "t1"."id", "t1"."id_album", "t1"."id_Alt_album" '
+                'FROM "photo" AS "t1" WHERE ("t1"."id_album" = ?)'
+            ),
+            [3],
+        )
+        self.assertSQL(
+            a.alt_pix,
+            (
+                'SELECT "t1"."id", "t1"."id_album", "t1"."id_Alt_album" '
+                'FROM "photo" AS "t1" WHERE ("t1"."id_Alt_album" = ?)'
+            ),
+            [4],
+        )
 
 
 class Composite(TestModel):
@@ -502,7 +561,7 @@ class Composite(TestModel):
     data = TextField()
 
     class Meta:
-        primary_key = CompositeKey('first', 'last')
+        primary_key = CompositeKey("first", "last")
 
 
 class TestCompositePrimaryKeyField(ModelTestCase):
@@ -517,22 +576,24 @@ class TestFieldFunction(ModelTestCase):
 
     def setUp(self):
         super(TestFieldFunction, self).setUp()
-        names = ('huey', 'mickey', 'zaizee', 'beanie', 'scout', 'hallee')
+        names = ("huey", "mickey", "zaizee", "beanie", "scout", "hallee")
         for name in names:
             PhoneBook.create(name=name)
 
     def _test_field_function(self, PB):
-        query = (PB
-                 .select()
-                 .where(PB.name.first_char() == 'h')
-                 .order_by(PB.name))
-        self.assertSQL(query, (
-            'SELECT "t1"."id", "t1"."name" '
-            'FROM "phone_book" AS "t1" '
-            'WHERE (SUBSTR("t1"."name", ?, ?) = ?) '
-            'ORDER BY "t1"."name"'), [1, 1, 'h'])
+        query = PB.select().where(PB.name.first_char() == "h").order_by(PB.name)
+        self.assertSQL(
+            query,
+            (
+                'SELECT "t1"."id", "t1"."name" '
+                'FROM "phone_book" AS "t1" '
+                'WHERE (SUBSTR("t1"."name", ?, ?) = ?) '
+                'ORDER BY "t1"."name"'
+            ),
+            [1, 1, "h"],
+        )
 
-        self.assertEqual([pb.name for pb in query], ['hallee', 'huey'])
+        self.assertEqual([pb.name for pb in query], ["hallee", "huey"])
 
     def test_field_function(self):
         self._test_field_function(PhoneBook)
@@ -550,7 +611,7 @@ class TestIPField(ModelTestCase):
     requires = [IPModel]
 
     def test_ip_field(self):
-        ips = ('0.0.0.0', '255.255.255.255', '192.168.1.1')
+        ips = ("0.0.0.0", "255.255.255.255", "192.168.1.1")
         for ip in ips:
             i = IPModel.create(ip=ip)
             i_db = IPModel.get(ip=ip)
@@ -635,7 +696,7 @@ class TestBitFields(ModelTestCase):
         buf = bytes_type(b.data._buffer)
         self.assertEqual(len(buf), 16)
 
-        self.assertEqual(bytes_type(buf), b'\x00' * 16)
+        self.assertEqual(bytes_type(buf), b"\x00" * 16)
 
     def test_bigbit_zero_idx(self):
         b = Bits()
@@ -667,8 +728,8 @@ class TestBlobField(ModelTestCase):
     requires = [BlobModel]
 
     def test_blob_field(self):
-        b = BlobModel.create(data=b'\xff\x01')
-        b_db = BlobModel.get(BlobModel.data == b'\xff\x01')
+        b = BlobModel.create(data=b"\xff\x01")
+        b_db = BlobModel.get(BlobModel.data == b"\xff\x01")
         self.assertEqual(b.id, b_db.id)
 
         data = b_db.data
@@ -676,16 +737,18 @@ class TestBlobField(ModelTestCase):
             data = data.tobytes()
         elif not isinstance(data, bytes):
             data = bytes(data)
-        self.assertEqual(data, b'\xff\x01')
+        self.assertEqual(data, b"\xff\x01")
 
     def test_blob_on_proxy(self):
         db = Proxy()
+
         class NewBlobModel(Model):
             data = BlobField()
+
             class Meta:
                 database = db
 
-        db_obj = SqliteDatabase(':memory:')
+        db_obj = SqliteDatabase(":memory:")
         db.initialize(db_obj)
         self.assertTrue(NewBlobModel.data._constructor is sqlite3.Binary)
 
@@ -704,7 +767,7 @@ class TestBlobField(ModelTestCase):
         self.assertTrue(B.b1._constructor is sentinel)
         self.assertTrue(B.b2._constructor is sentinel)
 
-        alt_db = SqliteDatabase(':memory:')
+        alt_db = SqliteDatabase(":memory:")
         with alt_db.bind_ctx([B]):
             # The constructor has been changed.
             self.assertTrue(B.b1._constructor is sqlite3.Binary)
@@ -724,20 +787,20 @@ class TestBigAutoField(ModelTestCase):
     requires = [BigModel]
 
     def test_big_auto_field(self):
-        b1 = BigModel.create(data='b1')
-        b2 = BigModel.create(data='b2')
+        b1 = BigModel.create(data="b1")
+        b2 = BigModel.create(data="b2")
 
         b1_db = BigModel.get(BigModel.pk == b1.pk)
         b2_db = BigModel.get(BigModel.pk == b2.pk)
 
         self.assertTrue(b1_db.pk < b2_db.pk)
-        self.assertTrue(b1_db.data, 'b1')
-        self.assertTrue(b2_db.data, 'b2')
+        self.assertTrue(b1_db.data, "b1")
+        self.assertTrue(b2_db.data, "b2")
 
 
 class Item(TestModel):
     price = IntegerField()
-    multiplier = FloatField(default=1.)
+    multiplier = FloatField(default=1.0)
 
 
 class Bare(TestModel):
@@ -748,93 +811,115 @@ class Bare(TestModel):
 class TestFieldValueHandling(ModelTestCase):
     requires = [Item]
 
-    @skip_if(IS_CRDB, 'crdb requires cast to multiply int and float')
+    @skip_if(IS_CRDB, "crdb requires cast to multiply int and float")
     def test_int_float_multi(self):
         i = Item.create(price=10, multiplier=0.75)
 
-        query = (Item
-                 .select(Item, (Item.price * Item.multiplier).alias('total'))
-                 .where(Item.id == i.id))
-        self.assertSQL(query, (
-            'SELECT "t1"."id", "t1"."price", "t1"."multiplier", '
-            '("t1"."price" * "t1"."multiplier") AS "total" '
-            'FROM "item" AS "t1" '
-            'WHERE ("t1"."id" = ?)'), [i.id])
+        query = Item.select(Item, (Item.price * Item.multiplier).alias("total")).where(
+            Item.id == i.id
+        )
+        self.assertSQL(
+            query,
+            (
+                'SELECT "t1"."id", "t1"."price", "t1"."multiplier", '
+                '("t1"."price" * "t1"."multiplier") AS "total" '
+                'FROM "item" AS "t1" '
+                'WHERE ("t1"."id" = ?)'
+            ),
+            [i.id],
+        )
 
         i_db = query.get()
         self.assertEqual(i_db.price, 10)
-        self.assertEqual(i_db.multiplier, .75)
+        self.assertEqual(i_db.multiplier, 0.75)
         self.assertEqual(i_db.total, 7.5)
 
         # By default, Peewee will use the Price field (integer) converter to
         # coerce the value of it's right-hand operand (converting to 0).
-        query = (Item
-                 .select(Item, (Item.price * 0.75).alias('total'))
-                 .where(Item.id == i.id))
-        self.assertSQL(query, (
-            'SELECT "t1"."id", "t1"."price", "t1"."multiplier", '
-            '("t1"."price" * ?) AS "total" '
-            'FROM "item" AS "t1" '
-            'WHERE ("t1"."id" = ?)'), [0, i.id])
+        query = Item.select(Item, (Item.price * 0.75).alias("total")).where(
+            Item.id == i.id
+        )
+        self.assertSQL(
+            query,
+            (
+                'SELECT "t1"."id", "t1"."price", "t1"."multiplier", '
+                '("t1"."price" * ?) AS "total" '
+                'FROM "item" AS "t1" '
+                'WHERE ("t1"."id" = ?)'
+            ),
+            [0, i.id],
+        )
 
         # We can explicitly pass "False" and the value will not be converted.
         exp = Item.price * Value(0.75, False)
-        query = (Item
-                 .select(Item, exp.alias('total'))
-                 .where(Item.id == i.id))
-        self.assertSQL(query, (
-            'SELECT "t1"."id", "t1"."price", "t1"."multiplier", '
-            '("t1"."price" * ?) AS "total" '
-            'FROM "item" AS "t1" '
-            'WHERE ("t1"."id" = ?)'), [0.75, i.id])
+        query = Item.select(Item, exp.alias("total")).where(Item.id == i.id)
+        self.assertSQL(
+            query,
+            (
+                'SELECT "t1"."id", "t1"."price", "t1"."multiplier", '
+                '("t1"."price" * ?) AS "total" '
+                'FROM "item" AS "t1" '
+                'WHERE ("t1"."id" = ?)'
+            ),
+            [0.75, i.id],
+        )
 
         i_db = query.get()
         self.assertEqual(i_db.price, 10)
-        self.assertEqual(i_db.multiplier, .75)
+        self.assertEqual(i_db.multiplier, 0.75)
         self.assertEqual(i_db.total, 7.5)
 
     def test_explicit_cast(self):
-        prices = ((10, 1.1), (5, .5))
+        prices = ((10, 1.1), (5, 0.5))
         for price, multiplier in prices:
             Item.create(price=price, multiplier=multiplier)
 
-        text = 'CHAR' if IS_MYSQL else 'TEXT'
+        text = "CHAR" if IS_MYSQL else "TEXT"
 
-        query = (Item
-                 .select(Item.price.cast(text).alias('price_text'),
-                         Item.multiplier.cast(text).alias('multiplier_text'))
-                 .order_by(Item.id)
-                 .dicts())
-        self.assertEqual(list(query), [
-            {'price_text': '10', 'multiplier_text': '1.1'},
-            {'price_text': '5', 'multiplier_text': '0.5'},
-        ])
+        query = (
+            Item.select(
+                Item.price.cast(text).alias("price_text"),
+                Item.multiplier.cast(text).alias("multiplier_text"),
+            )
+            .order_by(Item.id)
+            .dicts()
+        )
+        self.assertEqual(
+            list(query),
+            [
+                {"price_text": "10", "multiplier_text": "1.1"},
+                {"price_text": "5", "multiplier_text": "0.5"},
+            ],
+        )
 
-        item = (Item
-                .select(Item.price.cast(text).alias('price'),
-                        Item.multiplier.cast(text).alias('multiplier'))
-                .where(Item.price == 10)
-                .get())
-        self.assertEqual(item.price, '10')
-        self.assertEqual(item.multiplier, '1.1')
+        item = (
+            Item.select(
+                Item.price.cast(text).alias("price"),
+                Item.multiplier.cast(text).alias("multiplier"),
+            )
+            .where(Item.price == 10)
+            .get()
+        )
+        self.assertEqual(item.price, "10")
+        self.assertEqual(item.multiplier, "1.1")
 
     @requires_sqlite
     @requires_models(Bare)
     def test_bare_model_adapt(self):
-        b1 = Bare.create(key='k1', value=1)
-        b2 = Bare.create(key='k2', value='2')
-        b3 = Bare.create(key='k3', value=None)
+        b1 = Bare.create(key="k1", value=1)
+        b2 = Bare.create(key="k2", value="2")
+        b3 = Bare.create(key="k3", value=None)
 
         b1_db = Bare.get(Bare.id == b1.id)
-        self.assertEqual(b1_db.key, 'k1')
+        self.assertEqual(b1_db.key, "k1")
         self.assertEqual(b1_db.value, 1)
 
         b2_db = Bare.get(Bare.id == b2.id)
-        self.assertEqual(b2_db.key, 'k2')
+        self.assertEqual(b2_db.key, "k2")
         self.assertEqual(b2_db.value, 2)
 
         b3_db = Bare.get(Bare.id == b3.id)
-        self.assertEqual(b3_db.key, 'k3')
+        self.assertEqual(b3_db.key, "k3")
         self.assertTrue(b3_db.value is None)
 
 
@@ -901,6 +986,7 @@ class UU1(TestModel):
     id = UUIDField(default=uuid.uuid4, primary_key=True)
     name = TextField()
 
+
 class UU2(TestModel):
     id = UUIDField(default=uuid.uuid4, primary_key=True)
     u1 = ForeignKeyField(UU1)
@@ -912,18 +998,17 @@ class TestForeignKeyUUIDField(ModelTestCase):
 
     def test_bulk_insert(self):
         # Create three UU1 instances.
-        UU1.insert_many([{UU1.name: name} for name in 'abc'],
-                       fields=[UU1.id, UU1.name]).execute()
+        UU1.insert_many(
+            [{UU1.name: name} for name in "abc"], fields=[UU1.id, UU1.name]
+        ).execute()
         ua, ub, uc = UU1.select().order_by(UU1.name)
 
         # Create several UU2 instances.
-        data = (
-            ('a1', ua),
-            ('b1', ub),
-            ('b2', ub),
-            ('c1', uc))
-        iq = UU2.insert_many([{UU2.name: name, UU2.u1: u} for name, u in data],
-                             fields=[UU2.id, UU2.name, UU2.u1])
+        data = (("a1", ua), ("b1", ub), ("b2", ub), ("c1", uc))
+        iq = UU2.insert_many(
+            [{UU2.name: name, UU2.u1: u} for name, u in data],
+            fields=[UU2.id, UU2.name, UU2.u1],
+        )
         iq.execute()
 
         query = UU2.select().order_by(UU2.name)
@@ -984,9 +1069,8 @@ class TestTimestampField(ModelTestCase):
         # timestamps, adding "1" has the effect of adding a single second -
         # the value will be multiplied by the correct scale via the converter.
         TSModel.update(
-            ts_s=TSModel.ts_s + 1,
-            ts_us=TSModel.ts_us + 1,
-            ts_ms=TSModel.ts_ms + 1).execute()
+            ts_s=TSModel.ts_s + 1, ts_us=TSModel.ts_us + 1, ts_ms=TSModel.ts_ms + 1
+        ).execute()
 
         ts_db = TSModel.get(TSModel.id == ts.id)
         dt2 = dt + datetime.timedelta(seconds=1)
@@ -997,8 +1081,7 @@ class TestTimestampField(ModelTestCase):
     def test_timestamp_field_value_as_ts(self):
         dt = datetime.datetime(2018, 3, 1, 3, 3, 7, 31337)
         unix_ts = time.mktime(dt.timetuple()) + 0.031337
-        ts = TSModel.create(ts_s=unix_ts, ts_us=unix_ts, ts_ms=unix_ts,
-                            ts_u=unix_ts)
+        ts = TSModel.create(ts_s=unix_ts, ts_us=unix_ts, ts_ms=unix_ts, ts_u=unix_ts)
 
         # Fetch from the DB and validate the values were stored correctly.
         ts_db = TSModel[ts.id]
@@ -1044,7 +1127,7 @@ class TestTimestampField(ModelTestCase):
         ts = TSModel.create(ts_s=dt, ts_us=dt, ts_ms=dt, ts_u=dt_utc)
 
         fields = (TSModel.ts_s, TSModel.ts_us, TSModel.ts_ms, TSModel.ts_u)
-        attrs = ('year', 'month', 'day', 'hour', 'minute', 'second')
+        attrs = ("year", "month", "day", "hour", "minute", "second")
         selection = []
         for field in fields:
             for attr in attrs:
@@ -1074,10 +1157,11 @@ class TestTimestampField(ModelTestCase):
 
         ts = TSModel.create(ts_s=dt, ts_us=dt, ts_ms=dt, ts_u=dt_utc)
         query = TSModel.select(
-            TSModel.ts_s.from_timestamp().alias('dt_s'),
-            TSModel.ts_us.from_timestamp().alias('dt_us'),
-            TSModel.ts_ms.from_timestamp().alias('dt_ms'),
-            TSModel.ts_u.from_timestamp().alias('dt_u'))
+            TSModel.ts_s.from_timestamp().alias("dt_s"),
+            TSModel.ts_us.from_timestamp().alias("dt_us"),
+            TSModel.ts_ms.from_timestamp().alias("dt_ms"),
+            TSModel.ts_u.from_timestamp().alias("dt_u"),
+        )
 
         # Get row and unpack into variables corresponding to the fields.
         row = query.tuples()[0]
@@ -1088,7 +1172,7 @@ class TestTimestampField(ModelTestCase):
         self.assertEqual(dt_s, dt_ms)
         self.assertEqual(dt_s, dt_u)
         if IS_SQLITE:
-            expected = dt_utc.strftime('%Y-%m-%d %H:%M:%S')
+            expected = dt_utc.strftime("%Y-%m-%d %H:%M:%S")
             self.assertEqual(dt_s, expected)
         elif IS_POSTGRESQL or IS_CRDB:
             # Postgres returns an aware UTC datetime. Strip this to compare
@@ -1098,15 +1182,15 @@ class TestTimestampField(ModelTestCase):
     def test_invalid_resolution(self):
         self.assertRaises(ValueError, TimestampField, resolution=7)
         self.assertRaises(ValueError, TimestampField, resolution=20)
-        self.assertRaises(ValueError, TimestampField, resolution=10**7)
+        self.assertRaises(ValueError, TimestampField, resolution=10 ** 7)
 
 
 class ListField(TextField):
     def db_value(self, value):
-        return ','.join(value) if value else ''
+        return ",".join(value) if value else ""
 
     def python_value(self, value):
-        return value.split(',') if value else []
+        return value.split(",") if value else []
 
 
 class Todo(TestModel):
@@ -1118,16 +1202,16 @@ class TestCustomField(ModelTestCase):
     requires = [Todo]
 
     def test_custom_field(self):
-        t1 = Todo.create(content='t1', tags=['t1-a', 't1-b'])
-        t2 = Todo.create(content='t2', tags=[])
+        t1 = Todo.create(content="t1", tags=["t1-a", "t1-b"])
+        t2 = Todo.create(content="t2", tags=[])
 
         t1_db = Todo.get(Todo.id == t1.id)
-        self.assertEqual(t1_db.tags, ['t1-a', 't1-b'])
+        self.assertEqual(t1_db.tags, ["t1-a", "t1-b"])
 
         t2_db = Todo.get(Todo.id == t2.id)
         self.assertEqual(t2_db.tags, [])
 
-        t1_db = Todo.get(Todo.tags == AsIs(['t1-a', 't1-b']))
+        t1_db = Todo.get(Todo.tags == AsIs(["t1-a", "t1-b"]))
         self.assertEqual(t1_db.id, t1.id)
 
         t2_db = Todo.get(Todo.tags == AsIs([]))
@@ -1149,29 +1233,30 @@ class TestSQLFunctionDBValue(ModelTestCase):
 
     def test_sql_function_db_value(self):
         # Verify that the db function is applied as part of an INSERT.
-        um = UpperModel.create(name='huey')
+        um = UpperModel.create(name="huey")
         um_db = UpperModel.get(UpperModel.id == um.id)
-        self.assertEqual(um_db.name, 'HUEY')
+        self.assertEqual(um_db.name, "HUEY")
 
         # Verify that the db function is applied as part of an UPDATE.
-        um_db.name = 'zaizee'
+        um_db.name = "zaizee"
         um_db.save()
 
         # Ensure that the name was updated correctly.
         um_db2 = UpperModel.get(UpperModel.id == um.id)
-        self.assertEqual(um_db2.name, 'ZAIZEE')
+        self.assertEqual(um_db2.name, "ZAIZEE")
 
         # Verify that the db function is applied in a WHERE expression.
-        um_db3 = UpperModel.get(UpperModel.name == 'zaiZee')
+        um_db3 = UpperModel.get(UpperModel.name == "zaiZee")
         self.assertEqual(um_db3.id, um.id)
 
         # If we nest the field in a function, the conversion is not applied.
-        expr = fn.SUBSTR(UpperModel.name, 1, 1) == 'z'
+        expr = fn.SUBSTR(UpperModel.name, 1, 1) == "z"
         self.assertRaises(UpperModel.DoesNotExist, UpperModel.get, expr)
 
 
 class Schedule(TestModel):
     interval = IntegerField()
+
 
 class Task(TestModel):
     schedule = ForeignKeyField(Schedule)
@@ -1182,11 +1267,12 @@ class Task(TestModel):
 class TestDateTimeMath(ModelTestCase):
     offset_to_names = (
         (-10, ()),
-        (5, ('s1',)),
-        (10, ('s1', 's10')),
-        (11, ('s1', 's10')),
-        (60, ('s1', 's10', 's60')),
-        (61, ('s1', 's10', 's60')))
+        (5, ("s1",)),
+        (10, ("s1", "s10")),
+        (11, ("s1", "s10")),
+        (60, ("s1", "s10", "s60")),
+        (61, ("s1", "s10", "s60")),
+    )
     requires = [Schedule, Task]
 
     def setUp(self):
@@ -1197,17 +1283,18 @@ class TestDateTimeMath(ModelTestCase):
             s60 = Schedule.create(interval=60)
 
             self.dt = datetime.datetime(2019, 1, 1, 12)
-            for s, n in ((s1, 's1'), (s10, 's10'), (s60, 's60')):
+            for s, n in ((s1, "s1"), (s10, "s10"), (s60, "s60")):
                 Task.create(schedule=s, name=n, last_run=self.dt)
 
     def _do_test_date_time_math(self, next_occurrence_expression):
         for offset, names in self.offset_to_names:
             dt = Value(self.dt + datetime.timedelta(seconds=offset))
-            query = (Task
-                     .select(Task, Schedule)
-                     .join(Schedule)
-                     .where(dt >= next_occurrence_expression)
-                     .order_by(Schedule.interval))
+            query = (
+                Task.select(Task, Schedule)
+                .join(Schedule)
+                .where(dt >= next_occurrence_expression)
+                .order_by(Schedule.interval)
+            )
             tnames = [task.name for task in query]
             self.assertEqual(list(names), tnames)
 
@@ -1222,12 +1309,12 @@ class TestDateTimeMath(ModelTestCase):
         # Convert to a timestamp, add the scheduled seconds, then convert back
         # to a datetime string for comparison with the last occurrence.
         next_ts = Task.last_run.to_timestamp() + Schedule.interval
-        next_occurrence = fn.datetime(next_ts, 'unixepoch')
+        next_occurrence = fn.datetime(next_ts, "unixepoch")
         self._do_test_date_time_math(next_occurrence)
 
     @requires_mysql
     def test_date_time_math_mysql(self):
-        nl = NodeList((SQL('INTERVAL'), Schedule.interval, SQL('SECOND')))
+        nl = NodeList((SQL("INTERVAL"), Schedule.interval, SQL("SECOND")))
         next_occurrence = fn.date_add(Task.last_run, nl)
         self._do_test_date_time_math(next_occurrence)
 
@@ -1235,12 +1322,14 @@ class TestDateTimeMath(ModelTestCase):
 class NQ(TestModel):
     name = TextField()
 
+
 class NQItem(TestModel):
-    nq = ForeignKeyField(NQ, backref='items')
-    nq_null = ForeignKeyField(NQ, backref='null_items', null=True)
-    nq_lazy = ForeignKeyField(NQ, lazy_load=False, backref='lazy_items')
-    nq_lazy_null = ForeignKeyField(NQ, lazy_load=False,
-                                   backref='lazy_null_items', null=True)
+    nq = ForeignKeyField(NQ, backref="items")
+    nq_null = ForeignKeyField(NQ, backref="null_items", null=True)
+    nq_lazy = ForeignKeyField(NQ, lazy_load=False, backref="lazy_items")
+    nq_lazy_null = ForeignKeyField(
+        NQ, lazy_load=False, backref="lazy_null_items", null=True
+    )
 
 
 class TestForeignKeyLazyLoad(ModelTestCase):
@@ -1249,17 +1338,15 @@ class TestForeignKeyLazyLoad(ModelTestCase):
     def setUp(self):
         super(TestForeignKeyLazyLoad, self).setUp()
         with self.database.atomic():
-            a1, a2, a3, a4 = [NQ.create(name='a%s' % i) for i in range(1, 5)]
+            a1, a2, a3, a4 = [NQ.create(name="a%s" % i) for i in range(1, 5)]
             ai = NQItem.create(nq=a1, nq_null=a2, nq_lazy=a3, nq_lazy_null=a4)
 
-            b = NQ.create(name='b')
+            b = NQ.create(name="b")
             bi = NQItem.create(nq=b, nq_lazy=b)
 
     def test_foreign_key_lazy_load(self):
-        a1, a2, a3, a4 = (NQ.select()
-                          .where(NQ.name.startswith('a'))
-                          .order_by(NQ.name))
-        b = NQ.get(NQ.name == 'b')
+        a1, a2, a3, a4 = NQ.select().where(NQ.name.startswith("a")).order_by(NQ.name)
+        b = NQ.get(NQ.name == "b")
         ai = NQItem.get(NQItem.nq_id == a1.id)
         bi = NQItem.get(NQItem.nq_id == b.id)
 
@@ -1282,26 +1369,28 @@ class TestForeignKeyLazyLoad(ModelTestCase):
             self.assertEqual(bi.nq.id, b.id)
 
     def test_fk_lazy_select_related(self):
-        NA, NB, NC, ND = [NQ.alias(a) for a in ('na', 'nb', 'nc', 'nd')]
+        NA, NB, NC, ND = [NQ.alias(a) for a in ("na", "nb", "nc", "nd")]
         LO = JOIN.LEFT_OUTER
-        query = (NQItem.select(NQItem, NA, NB, NC, ND)
-                 .join_from(NQItem, NA, LO, on=NQItem.nq)
-                 .join_from(NQItem, NB, LO, on=NQItem.nq_null)
-                 .join_from(NQItem, NC, LO, on=NQItem.nq_lazy)
-                 .join_from(NQItem, ND, LO, on=NQItem.nq_lazy_null)
-                 .order_by(NQItem.id))
+        query = (
+            NQItem.select(NQItem, NA, NB, NC, ND)
+            .join_from(NQItem, NA, LO, on=NQItem.nq)
+            .join_from(NQItem, NB, LO, on=NQItem.nq_null)
+            .join_from(NQItem, NC, LO, on=NQItem.nq_lazy)
+            .join_from(NQItem, ND, LO, on=NQItem.nq_lazy_null)
+            .order_by(NQItem.id)
+        )
 
         # If we explicitly / eagerly select lazy foreign-key models, they
         # behave just like regular foreign keys.
         with self.assertQueryCount(1):
             ai, bi = [ni for ni in query]
-            self.assertEqual(ai.nq.name, 'a1')
-            self.assertEqual(ai.nq_null.name, 'a2')
-            self.assertEqual(ai.nq_lazy.name, 'a3')
-            self.assertEqual(ai.nq_lazy_null.name, 'a4')
+            self.assertEqual(ai.nq.name, "a1")
+            self.assertEqual(ai.nq_null.name, "a2")
+            self.assertEqual(ai.nq_lazy.name, "a3")
+            self.assertEqual(ai.nq_lazy_null.name, "a4")
 
-            self.assertEqual(bi.nq.name, 'b')
-            self.assertEqual(bi.nq_lazy.name, 'b')
+            self.assertEqual(bi.nq.name, "b")
+            self.assertEqual(bi.nq_lazy.name, "b")
             self.assertTrue(bi.nq_null is None)
             self.assertTrue(bi.nq_lazy_null is None)
 
@@ -1315,22 +1404,22 @@ class TestStringFields(ModelTestCase):
     requires = [SM]
 
     def test_string_fields(self):
-        bdata = b'b1'
-        udata = b'u1'.decode('utf8')
+        bdata = b"b1"
+        udata = b"u1".decode("utf8")
 
         sb = SM.create(text_field=bdata, char_field=bdata)
         su = SM.create(text_field=udata, char_field=udata)
 
         sb_db = SM.get(SM.id == sb.id)
-        self.assertEqual(sb_db.text_field, 'b1')
-        self.assertEqual(sb_db.char_field, 'b1')
+        self.assertEqual(sb_db.text_field, "b1")
+        self.assertEqual(sb_db.char_field, "b1")
 
         su_db = SM.get(SM.id == su.id)
-        self.assertEqual(su_db.text_field, 'u1')
-        self.assertEqual(su_db.char_field, 'u1')
+        self.assertEqual(su_db.text_field, "u1")
+        self.assertEqual(su_db.char_field, "u1")
 
-        bvals = (b'b1', u'b1')
-        uvals = (b'u1', u'u1')
+        bvals = (b"b1", u"b1")
+        uvals = (b"u1", u"u1")
 
         for field in (SM.text_field, SM.char_field):
             for bval in bvals:
@@ -1353,12 +1442,12 @@ class TestSqliteInvalidDataTypes(ModelTestCase):
     requires = [InvalidTypes]
 
     def test_invalid_data_types(self):
-        it = InvalidTypes.create(tfield=100, ifield='five', ffield='pi')
+        it = InvalidTypes.create(tfield=100, ifield="five", ffield="pi")
         it_db1 = InvalidTypes.get(InvalidTypes.tfield == 100)
-        it_db2 = InvalidTypes.get(InvalidTypes.ifield == 'five')
-        it_db3 = InvalidTypes.get(InvalidTypes.ffield == 'pi')
+        it_db2 = InvalidTypes.get(InvalidTypes.ifield == "five")
+        it_db3 = InvalidTypes.get(InvalidTypes.ffield == "pi")
         self.assertTrue(it.id == it_db1.id == it_db2.id == it_db3.id)
 
-        self.assertEqual(it_db1.tfield, '100')
-        self.assertEqual(it_db1.ifield, 'five')
-        self.assertEqual(it_db1.ffield, 'pi')
+        self.assertEqual(it_db1.tfield, "100")
+        self.assertEqual(it_db1.ifield, "five")
+        self.assertEqual(it_db1.ffield, "pi")

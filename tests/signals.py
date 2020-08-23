@@ -8,13 +8,17 @@ from .base import ModelTestCase
 class BaseSignalModel(signals.Model):
     pass
 
+
 class A(BaseSignalModel):
-    a = TextField(default='')
+    a = TextField(default="")
+
 
 class B(BaseSignalModel):
-    b = TextField(default='')
+    b = TextField(default="")
 
-class SubB(B): pass
+
+class SubB(B):
+    pass
 
 
 class TestSignals(ModelTestCase):
@@ -31,6 +35,7 @@ class TestSignals(ModelTestCase):
 
     def test_pre_save(self):
         state = []
+
         @signals.pre_save()
         def pre_save(sender, instance, created):
             state.append((sender, instance, instance._pk, created))
@@ -46,9 +51,11 @@ class TestSignals(ModelTestCase):
 
     def test_post_save(self):
         state = []
+
         @signals.post_save()
         def post_save(sender, instance, created):
             state.append((sender, instance, instance._pk, created))
+
         a = A()
         a.save()
 
@@ -61,6 +68,7 @@ class TestSignals(ModelTestCase):
 
     def test_pre_delete(self):
         state = []
+
         @signals.pre_delete()
         def pre_delete(sender, instance):
             state.append((sender, instance, A.select().count()))
@@ -71,6 +79,7 @@ class TestSignals(ModelTestCase):
 
     def test_post_delete(self):
         state = []
+
         @signals.post_delete()
         def post_delete(sender, instance):
             state.append((sender, instance, A.select().count()))
@@ -81,14 +90,14 @@ class TestSignals(ModelTestCase):
 
     def test_pre_init(self):
         state = []
-        A.create(a='a')
+        A.create(a="a")
 
         @signals.pre_init()
         def pre_init(sender, instance):
             state.append((sender, instance.a))
 
         A.get()
-        self.assertEqual(state, [(A, 'a')])
+        self.assertEqual(state, [(A, "a")])
 
     def test_sender(self):
         state = []
@@ -129,8 +138,7 @@ class TestSignals(ModelTestCase):
         self.assertEqual(state, [a, a3])
 
         # Signal was not registered with a sender, so this fails.
-        self.assertRaises(ValueError, signals.post_save.disconnect, post_save,
-                          sender=A)
+        self.assertRaises(ValueError, signals.post_save.disconnect, post_save, sender=A)
         signals.post_save.disconnect(post_save)
 
     def test_function_reuse(self):
@@ -160,6 +168,7 @@ class TestSignals(ModelTestCase):
 
 class NoPK(BaseSignalModel):
     val = IntegerField(index=True)
+
     class Meta:
         primary_key = False
 

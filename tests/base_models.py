@@ -9,9 +9,7 @@ class Person(TestModel):
     dob = DateField(index=True)
 
     class Meta:
-        indexes = (
-            (('first', 'last'), True),
-        )
+        indexes = ((("first", "last"), True),)
 
 
 class Note(TestModel):
@@ -20,13 +18,13 @@ class Note(TestModel):
 
 
 class Category(TestModel):
-    parent = ForeignKeyField('self', backref='children', null=True)
+    parent = ForeignKeyField("self", backref="children", null=True)
     name = CharField(max_length=20, primary_key=True)
 
 
 class Relationship(TestModel):
-    from_person = ForeignKeyField(Person, backref='relations')
-    to_person = ForeignKeyField(Person, backref='related_to')
+    from_person = ForeignKeyField(Person, backref="relations")
+    to_person = ForeignKeyField(Person, backref="related_to")
 
 
 class Register(TestModel):
@@ -37,23 +35,23 @@ class User(TestModel):
     username = CharField()
 
     class Meta:
-        table_name = 'users'
+        table_name = "users"
 
 
 class Account(TestModel):
     email = CharField()
-    user = ForeignKeyField(User, backref='accounts', null=True)
+    user = ForeignKeyField(User, backref="accounts", null=True)
 
 
 class Tweet(TestModel):
-    user = ForeignKeyField(User, backref='tweets')
+    user = ForeignKeyField(User, backref="tweets")
     content = TextField()
     timestamp = TimestampField()
 
 
 class Favorite(TestModel):
-    user = ForeignKeyField(User, backref='favorites')
-    tweet = ForeignKeyField(Tweet, backref='favorites')
+    user = ForeignKeyField(User, backref="favorites")
+    tweet = ForeignKeyField(Tweet, backref="favorites")
 
 
 class Sample(TestModel):
@@ -62,17 +60,21 @@ class Sample(TestModel):
 
 
 class SampleMeta(TestModel):
-    sample = ForeignKeyField(Sample, backref='metadata')
+    sample = ForeignKeyField(Sample, backref="metadata")
     value = FloatField(default=0.0)
 
 
 class A(TestModel):
     a = TextField()
+
+
 class B(TestModel):
-    a = ForeignKeyField(A, backref='bs')
+    a = ForeignKeyField(A, backref="bs")
     b = TextField()
+
+
 class C(TestModel):
-    b = ForeignKeyField(B, backref='cs')
+    b = ForeignKeyField(B, backref="cs")
     c = TextField()
 
 
@@ -82,9 +84,7 @@ class Emp(TestModel):
     empno = CharField(unique=True)
 
     class Meta:
-        indexes = (
-            (('first', 'last'), True),
-        )
+        indexes = ((("first", "last"), True),)
 
 
 class OCTest(TestModel):
@@ -102,5 +102,8 @@ class UKVP(TestModel):
         # Partial index, the WHERE clause must be reflected in the conflict
         # target.
         indexes = [
-            SQL('CREATE UNIQUE INDEX "ukvp_kve" ON "ukvp" ("key", "value") '
-                'WHERE "extra" > 1')]
+            SQL(
+                'CREATE UNIQUE INDEX "ukvp_kve" ON "ukvp" ("key", "value") '
+                'WHERE "extra" > 1'
+            )
+        ]

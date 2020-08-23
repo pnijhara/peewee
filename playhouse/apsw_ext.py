@@ -30,7 +30,7 @@ from playhouse.sqlite_ext import SqliteExtDatabase
 
 
 class APSWDatabase(SqliteExtDatabase):
-    server_version = tuple(int(i) for i in apsw.sqlitelibversion().split('.'))
+    server_version = tuple(int(i) for i in apsw.sqlitelibversion().split("."))
 
     def __init__(self, database, **kwargs):
         self._modules = {}
@@ -42,7 +42,7 @@ class APSWDatabase(SqliteExtDatabase):
             self.connection().createmodule(mod_name, mod_inst)
 
     def unregister_module(self, mod_name):
-        del(self._modules[mod_name])
+        del self._modules[mod_name]
 
     def _connect(self):
         conn = apsw.Connection(self.database, **self.connect_params)
@@ -66,8 +66,10 @@ class APSWDatabase(SqliteExtDatabase):
 
     def _load_aggregates(self, conn):
         for name, (klass, num_params) in self._aggregates.items():
+
             def make_aggregate():
                 return (klass(), klass.step, klass.finalize)
+
             conn.createaggregatefunction(name, make_aggregate)
 
     def _load_collations(self, conn):
@@ -96,15 +98,15 @@ class APSWDatabase(SqliteExtDatabase):
     def rows_affected(self, cursor):
         return cursor.getconnection().changes()
 
-    def begin(self, lock_type='deferred'):
-        self.cursor().execute('begin %s;' % lock_type)
+    def begin(self, lock_type="deferred"):
+        self.cursor().execute("begin %s;" % lock_type)
 
     def commit(self):
         with __exception_wrapper__:
             curs = self.cursor()
             if curs.getconnection().getautocommit():
                 return False
-            curs.execute('commit;')
+            curs.execute("commit;")
         return True
 
     def rollback(self):
@@ -112,7 +114,7 @@ class APSWDatabase(SqliteExtDatabase):
             curs = self.cursor()
             if curs.getconnection().getautocommit():
                 return False
-            curs.execute('rollback;')
+            curs.execute("rollback;")
         return True
 
     def execute_sql(self, sql, params=None, commit=True):
@@ -127,20 +129,25 @@ def nh(s, v):
     if v is not None:
         return str(v)
 
+
 class BooleanField(_BooleanField):
     def db_value(self, v):
         v = super(BooleanField, self).db_value(v)
         if v is not None:
             return v and 1 or 0
 
+
 class DateField(_DateField):
     db_value = nh
+
 
 class TimeField(_TimeField):
     db_value = nh
 
+
 class DateTimeField(_DateTimeField):
     db_value = nh
+
 
 class DecimalField(_DecimalField):
     db_value = nh

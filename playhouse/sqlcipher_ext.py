@@ -50,6 +50,7 @@ import sys
 
 from peewee import *
 from playhouse.sqlite_ext import SqliteExtDatabase
+
 if sys.version_info[0] != 3:
     from pysqlcipher import dbapi2 as sqlcipher
 else:
@@ -66,7 +67,7 @@ sqlcipher.register_adapter(datetime.time, str)
 class _SqlCipherDatabase(object):
     def _connect(self):
         params = dict(self.connect_params)
-        passphrase = params.pop('passphrase', '').replace("'", "''")
+        passphrase = params.pop("passphrase", "").replace("'", "''")
 
         conn = sqlcipher.connect(self.database, isolation_level=None, **params)
         try:
@@ -80,18 +81,20 @@ class _SqlCipherDatabase(object):
 
     def set_passphrase(self, passphrase):
         if not self.is_closed():
-            raise ImproperlyConfigured('Cannot set passphrase when database '
-                                       'is open. To change passphrase of an '
-                                       'open database use the rekey() method.')
+            raise ImproperlyConfigured(
+                "Cannot set passphrase when database "
+                "is open. To change passphrase of an "
+                "open database use the rekey() method."
+            )
 
-        self.connect_params['passphrase'] = passphrase
+        self.connect_params["passphrase"] = passphrase
 
     def rekey(self, passphrase):
         if self.is_closed():
             self.connect()
 
         self.execute_sql("PRAGMA rekey='%s'" % passphrase.replace("'", "''"))
-        self.connect_params['passphrase'] = passphrase
+        self.connect_params["passphrase"] = passphrase
         return True
 
 

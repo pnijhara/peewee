@@ -24,8 +24,9 @@ class BaseTransactionTestCase(ModelTestCase):
 
 
 def requires_nested(fn):
-    return skip_if(IS_CRDB and not IS_CRDB_NESTED_TX,
-                   'nested transaction support is required')(fn)
+    return skip_if(
+        IS_CRDB and not IS_CRDB_NESTED_TX, "nested transaction support is required"
+    )(fn)
 
 
 class TestTransaction(BaseTransactionTestCase):
@@ -220,10 +221,12 @@ class TestTransaction(BaseTransactionTestCase):
 
         with db.manual_commit():
             with self.assertRaises(ValueError):
-                with db.atomic(): pass
+                with db.atomic():
+                    pass
         with db.atomic():
             with self.assertRaises(ValueError):
-                with db.manual_commit(): pass
+                with db.manual_commit():
+                    pass
 
     def test_closing_db_in_transaction(self):
         with db.atomic():
@@ -242,7 +245,7 @@ class TestTransaction(BaseTransactionTestCase):
                 try:
                     with db:
                         self._save(3)
-                        raise ValueError('xxx')
+                        raise ValueError("xxx")
                 except ValueError:
                     pass
                 self._save(4)
@@ -252,7 +255,7 @@ class TestTransaction(BaseTransactionTestCase):
                     self._save(5)
                     with db:
                         self._save(6)
-                    raise ValueError('yyy')
+                    raise ValueError("yyy")
             except ValueError:
                 pass
 
@@ -361,29 +364,29 @@ class TestSession(BaseTransactionTestCase):
         self.assertRegister([1, 2, 3])
 
 
-@skip_unless(IS_SQLITE, 'requires sqlite for transaction lock type')
+@skip_unless(IS_SQLITE, "requires sqlite for transaction lock type")
 class TestTransactionLockType(BaseTransactionTestCase):
     def test_lock_type(self):
         db2 = new_connection(timeout=0.001)
         db2.connect()
 
-        with self.database.atomic(lock_type='EXCLUSIVE') as txn:
+        with self.database.atomic(lock_type="EXCLUSIVE") as txn:
             with self.assertRaises(OperationalError):
-                with db2.atomic(lock_type='IMMEDIATE') as t2:
+                with db2.atomic(lock_type="IMMEDIATE") as t2:
                     self._save(1)
             self._save(2)
         self.assertRegister([2])
 
-        with self.database.atomic('IMMEDIATE') as txn:
+        with self.database.atomic("IMMEDIATE") as txn:
             with self.assertRaises(OperationalError):
-                with db2.atomic('EXCLUSIVE') as t2:
+                with db2.atomic("EXCLUSIVE") as t2:
                     self._save(3)
             self._save(4)
         self.assertRegister([2, 4])
 
-        with self.database.transaction(lock_type='DEFERRED') as txn:
+        with self.database.transaction(lock_type="DEFERRED") as txn:
             self._save(5)  # Deferred -> Exclusive after our write.
             with self.assertRaises(OperationalError):
-                with db2.transaction(lock_type='IMMEDIATE') as t2:
+                with db2.transaction(lock_type="IMMEDIATE") as t2:
                     self._save(6)
         self.assertRegister([2, 4, 5])

@@ -8,9 +8,18 @@ from peewee import callable_
 _clone_set = lambda s: set(s) if s else set()
 
 
-def model_to_dict(model, recurse=True, backrefs=False, only=None,
-                  exclude=None, seen=None, extra_attrs=None,
-                  fields_from_query=None, max_depth=None, manytomany=False):
+def model_to_dict(
+    model,
+    recurse=True,
+    backrefs=False,
+    only=None,
+    exclude=None,
+    seen=None,
+    extra_attrs=None,
+    fields_from_query=None,
+    max_depth=None,
+    manytomany=False,
+):
     """
     Convert a model instance (and any related objects) to a dictionary.
 
@@ -59,13 +68,16 @@ def model_to_dict(model, recurse=True, backrefs=False, only=None,
 
             accum = []
             for rel_obj in getattr(model, name):
-                accum.append(model_to_dict(
-                    rel_obj,
-                    recurse=recurse,
-                    backrefs=backrefs,
-                    only=only,
-                    exclude=exclude,
-                    max_depth=max_depth - 1))
+                accum.append(
+                    model_to_dict(
+                        rel_obj,
+                        recurse=recurse,
+                        backrefs=backrefs,
+                        only=only,
+                        exclude=exclude,
+                        max_depth=max_depth - 1,
+                    )
+                )
             data[name] = accum
 
     for field in model._meta.sorted_fields:
@@ -84,7 +96,8 @@ def model_to_dict(model, recurse=True, backrefs=False, only=None,
                     only=only,
                     exclude=exclude,
                     seen=seen,
-                    max_depth=max_depth - 1)
+                    max_depth=max_depth - 1,
+                )
             else:
                 field_data = None
 
@@ -100,7 +113,8 @@ def model_to_dict(model, recurse=True, backrefs=False, only=None,
 
     if backrefs and recurse:
         for foreign_key, rel_model in model._meta.backrefs.items():
-            if foreign_key.backref == '+': continue
+            if foreign_key.backref == "+":
+                continue
             descriptor = getattr(model_class, foreign_key.backref)
             if descriptor in exclude or foreign_key in exclude:
                 continue
@@ -112,13 +126,16 @@ def model_to_dict(model, recurse=True, backrefs=False, only=None,
             related_query = getattr(model, foreign_key.backref)
 
             for rel_obj in related_query:
-                accum.append(model_to_dict(
-                    rel_obj,
-                    recurse=recurse,
-                    backrefs=backrefs,
-                    only=only,
-                    exclude=exclude,
-                    max_depth=max_depth - 1))
+                accum.append(
+                    model_to_dict(
+                        rel_obj,
+                        recurse=recurse,
+                        backrefs=backrefs,
+                        only=only,
+                        exclude=exclude,
+                        max_depth=max_depth - 1,
+                    )
+                )
 
             data[foreign_key.backref] = accum
 
@@ -140,8 +157,10 @@ def update_model_from_dict(instance, data, ignore_unknown=False):
             setattr(instance, key, value)
             continue
         else:
-            raise AttributeError('Unrecognized attribute "%s" for model '
-                                 'class %s.' % (key, type(instance)))
+            raise AttributeError(
+                'Unrecognized attribute "%s" for model '
+                "class %s." % (key, type(instance))
+            )
 
         is_foreign_key = isinstance(field, ForeignKeyField)
 
@@ -153,11 +172,13 @@ def update_model_from_dict(instance, data, ignore_unknown=False):
             setattr(
                 instance,
                 field.name,
-                update_model_from_dict(rel_instance, value, ignore_unknown))
+                update_model_from_dict(rel_instance, value, ignore_unknown),
+            )
         elif is_backref and isinstance(value, (list, tuple)):
             instances = [
                 dict_to_model(field.model, row_data, ignore_unknown)
-                for row_data in value]
+                for row_data in value
+            ]
             for rel_instance in instances:
                 setattr(rel_instance, field.name, instance)
             setattr(instance, field.backref, instances)
@@ -187,15 +208,15 @@ class ReconnectMixin(object):
     with Sqlite. If you wish to use with Postgres, you will need to adapt the
     `reconnect_errors` attribute to something appropriate for Postgres.
     """
+
     reconnect_errors = (
         # Error class, error message fragment (or empty string for all).
-        (OperationalError, '2006'),  # MySQL server has gone away.
-        (OperationalError, '2013'),  # Lost connection to MySQL server.
-        (OperationalError, '2014'),  # Commands out of sync.
-
+        (OperationalError, "2006"),  # MySQL server has gone away.
+        (OperationalError, "2013"),  # Lost connection to MySQL server.
+        (OperationalError, "2014"),  # Commands out of sync.
         # mysql-connector raises a slightly different error when an idle
         # connection is terminated by the server. This is equivalent to 2013.
-        (OperationalError, 'MySQL Connection not available.'),
+        (OperationalError, "MySQL Connection not available."),
     )
 
     def __init__(self, *args, **kwargs):
@@ -229,7 +250,7 @@ class ReconnectMixin(object):
             return super(ReconnectMixin, self).execute_sql(sql, params, commit)
 
 
-def resolve_multimodel_query(query, key='_model_identifier'):
+def resolve_multimodel_query(query, key="_model_identifier"):
     mapping = {}
     accum = [query]
     while accum:
