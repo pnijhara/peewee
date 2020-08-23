@@ -22,22 +22,21 @@ from .base_models import Register
 
 class FakeTransaction(_transaction):
     def _add_history(self, message):
-        self.db.transaction_history.append(
-            '%s%s' % (message, self._conn))
+        self.db.transaction_history.append("%s%s" % (message, self._conn))
 
     def __enter__(self):
         self._conn = self.db.connection()
-        self._add_history('O')
+        self._add_history("O")
         self.db.push_transaction(self)
 
     def __exit__(self, *args):
-        self._add_history('X')
+        self._add_history("X")
         self.db.pop_transaction()
 
 
 class FakeDatabase(SqliteDatabase):
     def __init__(self, *args, **kwargs):
-        self.counter = self.closed_counter = kwargs.pop('counter', 0)
+        self.counter = self.closed_counter = kwargs.pop("counter", 0)
         self.transaction_history = []
         super(FakeDatabase, self).__init__(*args, **kwargs)
 
@@ -65,7 +64,7 @@ class PooledTestDatabase(PooledDatabase, SqliteDatabase):
 class TestPooledDatabase(BaseTestCase):
     def setUp(self):
         super(TestPooledDatabase, self).setUp()
-        self.db = FakePooledDatabase('testing')
+        self.db = FakePooledDatabase("testing")
 
     def test_connection_pool(self):
         # Closing and reopening a connection returns us the same conn.
@@ -88,7 +87,7 @@ class TestPooledDatabase(BaseTestCase):
         self.assertEqual(self.db.connection(), 1)
 
     def test_concurrent_connections(self):
-        db = FakePooledDatabase('testing')
+        db = FakePooledDatabase("testing")
         signal = threading.Event()
 
         def open_conn():
@@ -103,16 +102,17 @@ class TestPooledDatabase(BaseTestCase):
 
         # Wait for all connections to be opened.
         while db.counter < 5:
-            time.sleep(.01)
+            time.sleep(0.01)
 
         # Signal threads to close connections and join threads.
         signal.set()
-        for t in threads: t.join()
+        for t in threads:
+            t.join()
 
         self.assertEqual(db.counter, 5)
         self.assertEqual(
-            sorted([conn for _, conn in db._connections]),
-            [1, 2, 3, 4, 5])  # All 5 are ready to be re-used.
+            sorted([conn for _, conn in db._connections]), [1, 2, 3, 4, 5]
+        )  # All 5 are ready to be re-used.
         self.assertEqual(db._in_use, {})
 
     def test_max_conns(self):
@@ -125,12 +125,12 @@ class TestPooledDatabase(BaseTestCase):
 
     def test_stale_timeout(self):
         # Create a test database with a very short stale timeout.
-        db = FakePooledDatabase('testing', stale_timeout=.001)
+        db = FakePooledDatabase("testing", stale_timeout=0.001)
         self.assertEqual(db.connection(), 1)
         self.assertTrue(1 in db._in_use)
 
         # Sleep long enough for the connection to be considered stale.
-        time.sleep(.001)
+        time.sleep(0.001)
 
         # When we close, since the conn is stale it won't be returned to
         # the pool.
@@ -143,17 +143,17 @@ class TestPooledDatabase(BaseTestCase):
 
     def test_stale_on_checkout(self):
         # Create a test database with a very short stale timeout.
-        db = FakePooledDatabase('testing', stale_timeout=.005)
+        db = FakePooledDatabase("testing", stale_timeout=0.005)
         self.assertEqual(db.connection(), 1)
         self.assertTrue(1 in db._in_use)
 
         # When we close, the conn should not be stale so it won't return to
         # the pool.
         db.close()
-        assert len(db._connections) == 1, 'Test runner too slow!'
+        assert len(db._connections) == 1, "Test runner too slow!"
 
         # Sleep long enough for the connection to be considered stale.
-        time.sleep(.005)
+        time.sleep(0.005)
         self.assertEqual(db._in_use, {})
         self.assertEqual(len(db._connections), 1)
 
@@ -180,7 +180,7 @@ class TestPooledDatabase(BaseTestCase):
         self.assertEqual(self.db.connection(), 2)
 
     def test_close_idle(self):
-        db = FakePooledDatabase('testing', counter=3)
+        db = FakePooledDatabase("testing", counter=3)
 
         now = time.time()
         heapq.heappush(db._connections, (now - 10, 3))
@@ -200,7 +200,7 @@ class TestPooledDatabase(BaseTestCase):
         self.assertEqual(db.connection(), 4)
 
     def test_close_stale(self):
-        db = FakePooledDatabase('testing', counter=3)
+        db = FakePooledDatabase("testing", counter=3)
 
         now = time.time()
         # Closing stale uses the last checkout time rather than the creation
@@ -214,7 +214,7 @@ class TestPooledDatabase(BaseTestCase):
         self.assertEqual(sorted(db._in_use), [3, 4])
 
     def test_close_all(self):
-        db = FakePooledDatabase('testing', counter=3)
+        db = FakePooledDatabase("testing", counter=3)
 
         now = time.time()
         heapq.heappush(db._connections, (now - 10, 3))
@@ -231,7 +231,7 @@ class TestPooledDatabase(BaseTestCase):
 
     def test_stale_timeout_cascade(self):
         now = time.time()
-        db = FakePooledDatabase('testing', stale_timeout=10)
+        db = FakePooledDatabase("testing", stale_timeout=10)
         conns = [
             (now - 20, 1),
             (now - 15, 2),
@@ -248,11 +248,12 @@ class TestPooledDatabase(BaseTestCase):
 
     def test_connect_cascade(self):
         now = time.time()
+
         class ClosedPooledDatabase(FakePooledDatabase):
             def _is_closed(self, conn):
                 return conn in (2, 4)
 
-        db = ClosedPooledDatabase('testing', stale_timeout=10)
+        db = ClosedPooledDatabase("testing", stale_timeout=10)
 
         conns = [
             (now - 15, 1),  # Skipped due to being stale.
@@ -284,10 +285,10 @@ class TestPooledDatabase(BaseTestCase):
         self.assertEqual(self.db.connection(), 1)
         with self.db:
             self.assertEqual(self.db.connection(), 1)
-            self.assertEqual(self.db.transaction_history, ['O1'])
+            self.assertEqual(self.db.transaction_history, ["O1"])
 
         self.assertEqual(self.db.connection(), 1)
-        self.assertEqual(self.db.transaction_history, ['O1', 'X1'])
+        self.assertEqual(self.db.transaction_history, ["O1", "X1"])
 
         with self.db:
             self.assertEqual(self.db.connection(), 1)
@@ -297,18 +298,21 @@ class TestPooledDatabase(BaseTestCase):
 
     def test_db_context_threads(self):
         signal = threading.Event()
+
         def create_context():
             with self.db:
                 signal.wait()
 
         threads = [threading.Thread(target=create_context) for i in range(5)]
-        for thread in threads: thread.start()
+        for thread in threads:
+            thread.start()
 
         while len(self.db.transaction_history) < 5:
-            time.sleep(.001)
+            time.sleep(0.001)
 
         signal.set()
-        for thread in threads: thread.join()
+        for thread in threads:
+            thread.join()
 
         self.assertEqual(self.db.counter, 5)
         self.assertEqual(len(self.db._connections), 5)
@@ -316,14 +320,14 @@ class TestPooledDatabase(BaseTestCase):
 
 
 class TestLivePooledDatabase(ModelTestCase):
-    database = PooledTestDatabase('test_pooled.db')
+    database = PooledTestDatabase("test_pooled.db")
     requires = [Register]
 
     def tearDown(self):
         super(TestLivePooledDatabase, self).tearDown()
         self.database.close_idle()
-        if os.path.exists('test_pooled.db'):
-            os.unlink('test_pooled.db')
+        if os.path.exists("test_pooled.db"):
+            os.unlink("test_pooled.db")
 
     def test_reuse_connection(self):
         for i in range(5):
@@ -335,8 +339,8 @@ class TestLivePooledDatabase(ModelTestCase):
             Register.create(value=i)
         self.assertEqual(id(self.database.connection()), conn_id)
         self.assertEqual(
-            [x.value for x in Register.select().order_by(Register.id)],
-            list(range(10)))
+            [x.value for x in Register.select().order_by(Register.id)], list(range(10))
+        )
 
     def test_db_context(self):
         with self.database:
@@ -357,7 +361,7 @@ class TestLivePooledDatabase(ModelTestCase):
     def test_bad_connection(self):
         self.database.connection()
         try:
-            self.database.execute_sql('select 1/0')
+            self.database.execute_sql("select 1/0")
         except Exception as exc:
             pass
         self.database.close()
@@ -377,16 +381,18 @@ class TestPooledDatabaseIntegration(ModelTestCase):
             db_class = PooledCockroachDatabase
         else:
             db_class = PooledSqliteDatabase
-            params['check_same_thread'] = False
+            params["check_same_thread"] = False
         self.database = db_loader(BACKEND, db_class=db_class, **params)
         super(TestPooledDatabaseIntegration, self).setUp()
 
     def assertConnections(self, expected):
         available = len(self.database._connections)
         in_use = len(self.database._in_use)
-        self.assertEqual(available + in_use, expected,
-                         'expected %s, got: %s available, %s in use'
-                         % (expected, available, in_use))
+        self.assertEqual(
+            available + in_use,
+            expected,
+            "expected %s, got: %s available, %s in use" % (expected, available, in_use),
+        )
 
     def test_pooled_database_integration(self):
         # Connection should be open from the setup method.
@@ -397,6 +403,7 @@ class TestPooledDatabaseIntegration(ModelTestCase):
         self.assertConnections(1)
 
         signal = threading.Event()
+
         def connect():
             self.assertTrue(self.database.is_closed())
             self.assertTrue(self.database.connect())
@@ -407,14 +414,16 @@ class TestPooledDatabaseIntegration(ModelTestCase):
 
         # Open connections in 4 separate threads.
         threads = [threading.Thread(target=connect) for _ in range(4)]
-        for t in threads: t.start()
+        for t in threads:
+            t.start()
 
         while len(self.database._in_use) < 4:
-            time.sleep(.005)
+            time.sleep(0.005)
 
         # Close connections in all 4 threads.
         signal.set()
-        for t in threads: t.join()
+        for t in threads:
+            t.join()
 
         # Verify that there are 4 connections available in the pool.
         self.assertConnections(4)
@@ -449,9 +458,9 @@ class TestPooledDatabaseIntegration(ModelTestCase):
         # transaction, and after COMMIT (but while the conn is still open), we
         # will wait for the signal that all objects were created. This ensures
         # that all our connections are open concurrently.
-        threads = [threading.Thread(target=create_obj, args=(i,))
-                   for i in range(4)]
-        for t in threads: t.start()
+        threads = [threading.Thread(target=create_obj, args=(i,)) for i in range(4)]
+        for t in threads:
+            t.start()
 
         # Explicitly connect, as the connection is required to verify that all
         # the objects are present (and that its safe to set the signal).
@@ -461,7 +470,8 @@ class TestPooledDatabaseIntegration(ModelTestCase):
 
         # Signal threads that they can exit now and ensure all exited.
         signal.set()
-        for t in threads: t.join()
+        for t in threads:
+            t.join()
 
         # Close connection from main thread as well.
         self.database.close()

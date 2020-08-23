@@ -10,7 +10,7 @@ from distutils.errors import DistutilsPlatformError
 from setuptools import setup
 from setuptools.extension import Extension
 
-f = open(os.path.join(os.path.dirname(__file__), 'README.rst'))
+f = open(os.path.join(os.path.dirname(__file__), "README.rst"))
 readme = f.read()
 f.close()
 
@@ -26,31 +26,30 @@ try:
 except ImportError:
     cython_installed = False
 else:
-    if platform.python_implementation() != 'CPython':
+    if platform.python_implementation() != "CPython":
         cython_installed = extension_support = False
-        warnings.warn('C extensions disabled as you are not using CPython.')
+        warnings.warn("C extensions disabled as you are not using CPython.")
     else:
         cython_installed = True
 
-if 'sdist' in sys.argv and not cython_installed:
-    raise Exception('Building sdist requires that Cython be installed.')
+if "sdist" in sys.argv and not cython_installed:
+    raise Exception("Building sdist requires that Cython be installed.")
 
 if sys.version_info[0] < 3:
     FileNotFoundError = EnvironmentError
 
 if cython_installed:
-    src_ext = '.pyx'
+    src_ext = ".pyx"
 else:
-    src_ext = '.c'
+    src_ext = ".c"
     cythonize = lambda obj: obj
 
 sqlite_udf_module = Extension(
-    'playhouse._sqlite_udf',
-    ['playhouse/_sqlite_udf' + src_ext])
+    "playhouse._sqlite_udf", ["playhouse/_sqlite_udf" + src_ext]
+)
 sqlite_ext_module = Extension(
-    'playhouse._sqlite_ext',
-    ['playhouse/_sqlite_ext' + src_ext],
-    libraries=['sqlite3'])
+    "playhouse._sqlite_ext", ["playhouse/_sqlite_ext" + src_ext], libraries=["sqlite3"]
+)
 
 
 def _have_sqlite_extension_support():
@@ -59,13 +58,12 @@ def _have_sqlite_extension_support():
     from distutils.ccompiler import new_compiler
     from distutils.sysconfig import customize_compiler
 
-    libraries = ['sqlite3']
-    c_code = ('#include <sqlite3.h>\n\n'
-              'int main(int argc, char **argv) { return 0; }')
-    tmp_dir = tempfile.mkdtemp(prefix='tmp_pw_sqlite3_')
-    bin_file = os.path.join(tmp_dir, 'test_pw_sqlite3')
-    src_file = bin_file + '.c'
-    with open(src_file, 'w') as fh:
+    libraries = ["sqlite3"]
+    c_code = "#include <sqlite3.h>\n\n" "int main(int argc, char **argv) { return 0; }"
+    tmp_dir = tempfile.mkdtemp(prefix="tmp_pw_sqlite3_")
+    bin_file = os.path.join(tmp_dir, "test_pw_sqlite3")
+    src_file = bin_file + ".c"
+    with open(src_file, "w") as fh:
         fh.write(c_code)
 
     compiler = new_compiler()
@@ -75,15 +73,16 @@ def _have_sqlite_extension_support():
         compiler.link_executable(
             compiler.compile([src_file], output_dir=tmp_dir),
             bin_file,
-            libraries=['sqlite3'])
+            libraries=["sqlite3"],
+        )
     except CCompilerError:
-        print('unable to compile sqlite3 C extensions - missing headers?')
+        print("unable to compile sqlite3 C extensions - missing headers?")
     except DistutilsExecError:
-        print('unable to compile sqlite3 C extensions - no c compiler?')
+        print("unable to compile sqlite3 C extensions - no c compiler?")
     except DistutilsPlatformError:
-        print('unable to compile sqlite3 C extensions - platform error')
+        print("unable to compile sqlite3 C extensions - platform error")
     except FileNotFoundError:
-        print('unable to compile sqlite3 C extensions - no compiler!')
+        print("unable to compile sqlite3 C extensions - no compiler!")
     else:
         success = True
     shutil.rmtree(tmp_dir)
@@ -94,16 +93,19 @@ def _have_sqlite_extension_support():
 sqlite_extension_support = False
 
 if extension_support:
-    if os.environ.get('NO_SQLITE'):
-        warnings.warn('SQLite extensions will not be built at users request.')
+    if os.environ.get("NO_SQLITE"):
+        warnings.warn("SQLite extensions will not be built at users request.")
     elif not _have_sqlite_extension_support():
-        warnings.warn('Could not find libsqlite3, SQLite extensions will not '
-                      'be built.')
+        warnings.warn(
+            "Could not find libsqlite3, SQLite extensions will not " "be built."
+        )
     else:
         sqlite_extension_support = True
 
 # Exception we will raise to indicate a failure to build C extensions.
-class BuildFailure(Exception): pass
+class BuildFailure(Exception):
+    pass
+
 
 class _PeeweeBuildExt(build_ext):
     def run(self):
@@ -118,6 +120,7 @@ class _PeeweeBuildExt(build_ext):
         except (CCompilerError, DistutilsExecError, DistutilsPlatformError):
             raise BuildFailure()
 
+
 def _do_setup(c_extensions, sqlite_extensions):
     if c_extensions and sqlite_extensions:
         ext_modules = [sqlite_udf_module, sqlite_ext_module]
@@ -125,45 +128,46 @@ def _do_setup(c_extensions, sqlite_extensions):
         ext_modules = None
 
     setup(
-        name='peewee',
-        version=__import__('peewee').__version__,
-        description='a little orm',
+        name="peewee",
+        version=__import__("peewee").__version__,
+        description="a little orm",
         long_description=readme,
-        author='Charles Leifer',
-        author_email='coleifer@gmail.com',
-        url='https://github.com/coleifer/peewee/',
-        packages=['playhouse'],
-        py_modules=['peewee', 'pwiz'],
+        author="Charles Leifer",
+        author_email="coleifer@gmail.com",
+        url="https://github.com/coleifer/peewee/",
+        packages=["playhouse"],
+        py_modules=["peewee", "pwiz"],
         classifiers=[
-            'Development Status :: 5 - Production/Stable',
-            'Intended Audience :: Developers',
-            'License :: OSI Approved :: MIT License',
-            'Operating System :: OS Independent',
-            'Programming Language :: Python',
-            'Programming Language :: Python :: 2',
-            'Programming Language :: Python :: 2.7',
-            'Programming Language :: Python :: 3',
-            'Programming Language :: Python :: 3.4',
-            'Programming Language :: Python :: 3.5',
-            'Programming Language :: Python :: 3.6',
-            'Programming Language :: Python :: 3.7',
-            'Topic :: Software Development :: Libraries :: Python Modules',
+            "Development Status :: 5 - Production/Stable",
+            "Intended Audience :: Developers",
+            "License :: OSI Approved :: MIT License",
+            "Operating System :: OS Independent",
+            "Programming Language :: Python",
+            "Programming Language :: Python :: 2",
+            "Programming Language :: Python :: 2.7",
+            "Programming Language :: Python :: 3",
+            "Programming Language :: Python :: 3.4",
+            "Programming Language :: Python :: 3.5",
+            "Programming Language :: Python :: 3.6",
+            "Programming Language :: Python :: 3.7",
+            "Topic :: Software Development :: Libraries :: Python Modules",
         ],
-        license='MIT License',
-        platforms=['any'],
-        scripts=['pwiz.py'],
+        license="MIT License",
+        platforms=["any"],
+        scripts=["pwiz.py"],
         zip_safe=False,
-        cmdclass={'build_ext': _PeeweeBuildExt},
-        ext_modules=cythonize(ext_modules))
+        cmdclass={"build_ext": _PeeweeBuildExt},
+        ext_modules=cythonize(ext_modules),
+    )
 
 
 if extension_support:
     try:
         _do_setup(extension_support, sqlite_extension_support)
     except BuildFailure:
-        print('#' * 75)
-        print('Error compiling C extensions, C extensions will not be built.')
-        print('#' * 75)
+        print("#" * 75)
+        print("Error compiling C extensions, C extensions will not be built.")
+        print("#" * 75)
         _do_setup(False, False)
 else:
     _do_setup(False, False)

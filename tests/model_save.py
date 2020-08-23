@@ -9,20 +9,25 @@ class T1(TestModel):
     pk = AutoField()
     value = IntegerField()
 
+
 class T2(TestModel):
-    pk = IntegerField(constraints=[SQL('DEFAULT 3')], primary_key=True)
+    pk = IntegerField(constraints=[SQL("DEFAULT 3")], primary_key=True)
     value = IntegerField()
+
 
 class T3(TestModel):
     pk = IntegerField(primary_key=True)
     value = IntegerField()
 
+
 class T4(TestModel):
     pk1 = IntegerField()
     pk2 = IntegerField()
     value = IntegerField()
+
     class Meta:
-        primary_key = CompositeKey('pk1', 'pk2')
+        primary_key = CompositeKey("pk1", "pk2")
+
 
 class T5(TestModel):
     val = IntegerField(null=True)
@@ -127,7 +132,7 @@ class TestPrimaryKeySaveHandling(ModelTestCase):
     @requires_pglike
     def test_returning_object(self):
         query = T2.insert(value=10).returning(T2).objects()
-        t2_db, = list(query)
+        (t2_db,) = list(query)
         self.assertEqual(t2_db.pk, 3)
         self.assertEqual(t2_db.value, 10)
 

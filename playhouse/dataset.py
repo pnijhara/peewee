@@ -3,6 +3,7 @@ import datetime
 from decimal import Decimal
 import json
 import operator
+
 try:
     from urlparse import urlparse
 except ImportError:
@@ -18,8 +19,11 @@ from playhouse.reflection import Introspector
 if sys.version_info[0] == 3:
     basestring = str
     from functools import reduce
+
     def open_file(f, mode):
-        return open(f, mode, encoding='utf8')
+        return open(f, mode, encoding="utf8")
+
+
 else:
     open_file = open
 
@@ -43,32 +47,26 @@ class DataSet(object):
         # Introspect the database and generate models.
         self._introspector = Introspector.from_database(self._database)
         self._models = self._introspector.generate_models(
-            skip_invalid=True,
-            literal_column_names=True,
-            **kwargs)
+            skip_invalid=True, literal_column_names=True, **kwargs
+        )
         self._migrator = SchemaMigrator.from_database(self._database)
 
         class BaseModel(Model):
             class Meta:
                 database = self._database
+
         self._base_model = BaseModel
         self._export_formats = self.get_export_formats()
         self._import_formats = self.get_import_formats()
 
     def __repr__(self):
-        return '<DataSet: %s>' % self._database_path
+        return "<DataSet: %s>" % self._database_path
 
     def get_export_formats(self):
-        return {
-            'csv': CSVExporter,
-            'json': JSONExporter,
-            'tsv': TSVExporter}
+        return {"csv": CSVExporter, "json": JSONExporter, "tsv": TSVExporter}
 
     def get_import_formats(self):
-        return {
-            'csv': CSVImporter,
-            'json': JSONImporter,
-            'tsv': TSVImporter}
+        return {"csv": CSVImporter, "json": JSONImporter, "tsv": TSVImporter}
 
     def __getitem__(self, table):
         if table not in self._models and table in self.tables:
@@ -93,18 +91,20 @@ class DataSet(object):
             dependencies = [table]
             if table in self._models:
                 model_class = self._models[table]
-                dependencies.extend([
-                    related._meta.table_name for _, related, _ in
-                    model_class._meta.model_graph()])
+                dependencies.extend(
+                    [
+                        related._meta.table_name
+                        for _, related, _ in model_class._meta.model_graph()
+                    ]
+                )
             else:
                 dependencies.extend(self.get_table_dependencies(table))
         else:
             dependencies = None  # Update all tables.
             self._models = {}
         updated = self._introspector.generate_models(
-            skip_invalid=True,
-            table_names=dependencies,
-            literal_column_names=True)
+            skip_invalid=True, table_names=dependencies, literal_column_names=True
+        )
         self._models.update(updated)
 
     def get_table_dependencies(self, table):
@@ -139,21 +139,22 @@ class DataSet(object):
 
     def _check_arguments(self, filename, file_obj, format, format_dict):
         if filename and file_obj:
-            raise ValueError('file is over-specified. Please use either '
-                             'filename or file_obj, but not both.')
+            raise ValueError(
+                "file is over-specified. Please use either "
+                "filename or file_obj, but not both."
+            )
         if not filename and not file_obj:
-            raise ValueError('A filename or file-like object must be '
-                             'specified.')
+            raise ValueError("A filename or file-like object must be " "specified.")
         if format not in format_dict:
-            valid_formats = ', '.join(sorted(format_dict.keys()))
-            raise ValueError('Unsupported format "%s". Use one of %s.' % (
-                format, valid_formats))
+            valid_formats = ", ".join(sorted(format_dict.keys()))
+            raise ValueError(
+                'Unsupported format "%s". Use one of %s.' % (format, valid_formats)
+            )
 
-    def freeze(self, query, format='csv', filename=None, file_obj=None,
-               **kwargs):
+    def freeze(self, query, format="csv", filename=None, file_obj=None, **kwargs):
         self._check_arguments(filename, file_obj, format, self._export_formats)
         if filename:
-            file_obj = open_file(filename, 'w')
+            file_obj = open_file(filename, "w")
 
         exporter = self._export_formats[format](query)
         exporter.export(file_obj, **kwargs)
@@ -161,11 +162,12 @@ class DataSet(object):
         if filename:
             file_obj.close()
 
-    def thaw(self, table, format='csv', filename=None, file_obj=None,
-             strict=False, **kwargs):
+    def thaw(
+        self, table, format="csv", filename=None, file_obj=None, strict=False, **kwargs
+    ):
         self._check_arguments(filename, file_obj, format, self._export_formats)
         if filename:
-            file_obj = open_file(filename, 'r')
+            file_obj = open_file(filename, "r")
 
         importer = self._import_formats[format](self[table], strict)
         count = importer.load(file_obj, **kwargs)
@@ -190,7 +192,7 @@ class Table(object):
         return self.dataset._models[self.name]
 
     def __repr__(self):
-        return '<Table: %s>' % self.name
+        return "<Table: %s>" % self.name
 
     def __len__(self):
         return self.find().count()
@@ -201,16 +203,11 @@ class Table(object):
     def _create_model(self):
         class Meta:
             table_name = self.name
-        return type(
-            str(self.name),
-            (self.dataset._base_model,),
-            {'Meta': Meta})
+
+        return type(str(self.name), (self.dataset._base_model,), {"Meta": Meta})
 
     def create_index(self, columns, unique=False):
-        self.dataset._database.create_index(
-            self.model_class,
-            columns,
-            unique=unique)
+        self.dataset._database.create_index(self.model_class, columns, unique=unique)
 
     def _guess_field_type(self, value):
         if isinstance(value, basestring):
@@ -239,7 +236,8 @@ class Table(object):
                 field_class = self._guess_field_type(data[key])
                 field = field_class(null=True)
                 operations.append(
-                    self.dataset._migrator.add_column(self.name, key, field))
+                    self.dataset._migrator.add_column(self.name, key, field)
+                )
                 field.bind(self.model_class, key)
 
             migrate(*operations)
@@ -254,7 +252,7 @@ class Table(object):
 
     def __setitem__(self, item, value):
         if not isinstance(value, dict):
-            raise ValueError('Table.__setitem__() value must be a dict')
+            raise ValueError("Table.__setitem__() value must be a dict")
 
         pk = self.model_class._meta.primary_key
         value[pk.name] = item
@@ -278,7 +276,8 @@ class Table(object):
         if filters:
             expressions = [
                 (self.model_class._meta.fields[column] == value)
-                for column, value in filters.items()]
+                for column, value in filters.items()
+            ]
             query = query.where(reduce(conjunction, expressions))
         return query
 
@@ -290,9 +289,8 @@ class Table(object):
                 filters[column] = data.pop(column)
 
         return self._apply_where(
-            self.model_class.update(**data),
-            filters,
-            conjunction).execute()
+            self.model_class.update(**data), filters, conjunction
+        ).execute()
 
     def _query(self, **query):
         return self._apply_where(self.model_class.select(), query)
@@ -336,25 +334,25 @@ class JSONExporter(Exporter):
         datetime_types = (datetime.datetime, datetime.date, datetime.time)
 
         if self.iso8601_datetimes:
+
             def default(o):
                 if isinstance(o, datetime_types):
                     return o.isoformat()
                 elif isinstance(o, Decimal):
                     return str(o)
-                raise TypeError('Unable to serialize %r as JSON' % o)
+                raise TypeError("Unable to serialize %r as JSON" % o)
+
         else:
+
             def default(o):
                 if isinstance(o, datetime_types + (Decimal,)):
                     return str(o)
-                raise TypeError('Unable to serialize %r as JSON' % o)
+                raise TypeError("Unable to serialize %r as JSON" % o)
+
         return default
 
     def export(self, file_obj, **kwargs):
-        json.dump(
-            list(self.query),
-            file_obj,
-            default=self._make_default(),
-            **kwargs)
+        json.dump(list(self.query), file_obj, default=self._make_default(), **kwargs)
 
 
 class CSVExporter(Exporter):
@@ -362,7 +360,7 @@ class CSVExporter(Exporter):
         writer = csv.writer(file_obj, **kwargs)
         tuples = self.query.tuples().execute()
         tuples.initialize()
-        if header and getattr(tuples, 'columns', None):
+        if header and getattr(tuples, "columns", None):
             writer.writerow([column for column in tuples.columns])
         for row in tuples:
             writer.writerow(row)
@@ -370,7 +368,7 @@ class CSVExporter(Exporter):
 
 class TSVExporter(CSVExporter):
     def export(self, file_obj, header=True, **kwargs):
-        kwargs.setdefault('delimiter', '\t')
+        kwargs.setdefault("delimiter", "\t")
         return super(TSVExporter, self).export(file_obj, header, **kwargs)
 
 
@@ -448,5 +446,5 @@ class CSVImporter(Importer):
 
 class TSVImporter(CSVImporter):
     def load(self, file_obj, header=True, **kwargs):
-        kwargs.setdefault('delimiter', '\t')
+        kwargs.setdefault("delimiter", "\t")
         return super(TSVImporter, self).load(file_obj, header, **kwargs)

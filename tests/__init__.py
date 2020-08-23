@@ -24,62 +24,70 @@ from .transactions import *
 try:
     from .apsw_ext import *
 except ImportError:
-    print('Unable to import APSW extension tests, skipping.')
+    print("Unable to import APSW extension tests, skipping.")
 try:
     from .cockroachdb import *
 except ImportError:
-    print('Unable to import CockroachDB tests, skipping.')
+    print("Unable to import CockroachDB tests, skipping.")
 try:
     from .cysqlite import *
 except ImportError:
-    print('Unable to import sqlite C extension tests, skipping.')
+    print("Unable to import sqlite C extension tests, skipping.")
 from .dataset import *
 from .db_url import *
 from .extra_fields import *
 from .hybrid import *
 from .kv import *
 from .migrations import *
+
 try:
     import mysql.connector
     from .mysql_ext import *
 except ImportError:
-    print('Unable to import mysql-connector, skipping mysql_ext tests.')
+    print("Unable to import mysql-connector, skipping mysql_ext tests.")
 from .pool import *
+
 try:
     from .postgres import *
 except ImportError:
-    print('Unable to import postgres extension tests, skipping.')
+    print("Unable to import postgres extension tests, skipping.")
 except OperationalError:
-    print('Postgresql test database "peewee_test" not found, skipping '
-          'the postgres_ext tests.')
+    print(
+        'Postgresql test database "peewee_test" not found, skipping '
+        "the postgres_ext tests."
+    )
 from .pwiz_integration import *
 from .reflection import *
 from .shortcuts import *
 from .signals import *
+
 try:
     from .sqlcipher_ext import *
 except ImportError:
-    print('Unable to import SQLCipher extension tests, skipping.')
+    print("Unable to import SQLCipher extension tests, skipping.")
 try:
     from .sqlite import *
 except ImportError:
-    print('Unable to import sqlite extension tests, skipping.')
+    print("Unable to import sqlite extension tests, skipping.")
 try:
     from .sqlite_changelog import *
 except ImportError:
-    print('Unable to import sqlite changelog tests, skipping.')
+    print("Unable to import sqlite changelog tests, skipping.")
 from .sqliteq import *
 from .sqlite_udf import *
 from .test_utils import *
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from peewee import print_
-    print_("""\033[1;31m
+
+    print_(
+        """\033[1;31m
      ______   ______     ______     __     __     ______     ______
     /\  == \ /\  ___\   /\  ___\   /\ \  _ \ \   /\  ___\   /\  ___\\
     \ \  _-/ \ \  __\   \ \  __\   \ \ \/ ".\ \  \ \  __\   \ \  __\\
      \ \_\    \ \_____\  \ \_____\  \ \__/".~\_\  \ \_____\  \ \_____\\
       \/_/     \/_____/   \/_____/   \/_/   \/_/   \/_____/   \/_____/
-    \033[0m""")
+    \033[0m"""
+    )
     unittest.main(argv=sys.argv)

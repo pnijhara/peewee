@@ -20,21 +20,20 @@ PY2 = sys.version_info[0] == 2
 
 
 class CompressedField(BlobField):
-    ZLIB = 'zlib'
-    BZ2 = 'bz2'
+    ZLIB = "zlib"
+    BZ2 = "bz2"
     algorithm_to_import = {
         ZLIB: zlib,
         BZ2: bz2,
     }
 
-    def __init__(self, compression_level=6, algorithm=ZLIB, *args,
-                 **kwargs):
+    def __init__(self, compression_level=6, algorithm=ZLIB, *args, **kwargs):
         self.compression_level = compression_level
         if algorithm not in self.algorithm_to_import:
-            raise ValueError('Unrecognized algorithm %s' % algorithm)
+            raise ValueError("Unrecognized algorithm %s" % algorithm)
         compress_module = self.algorithm_to_import[algorithm]
         if compress_module is None:
-            raise ValueError('Missing library required for %s.' % algorithm)
+            raise ValueError("Missing library required for %s." % algorithm)
 
         self.algorithm = algorithm
         self.compress = compress_module.compress
@@ -47,8 +46,7 @@ class CompressedField(BlobField):
 
     def db_value(self, value):
         if value is not None:
-            return self._constructor(
-                self.compress(value, self.compression_level))
+            return self._constructor(self.compress(value, self.compression_level))
 
 
 class PickleField(BlobField):

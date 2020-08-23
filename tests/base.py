@@ -5,6 +5,7 @@ import logging
 import os
 import re
 import unittest
+
 try:
     from unittest import mock
 except ImportError:
@@ -17,25 +18,26 @@ from playhouse.cockroachdb import CockroachDatabase
 from playhouse.cockroachdb import NESTED_TX_MIN_VERSION
 
 
-logger = logging.getLogger('peewee')
+logger = logging.getLogger("peewee")
 
 
-def db_loader(engine, name='peewee_test', db_class=None, **params):
+def db_loader(engine, name="peewee_test", db_class=None, **params):
     if db_class is None:
         engine_aliases = {
-            SqliteDatabase: ['sqlite', 'sqlite3'],
-            MySQLDatabase: ['mysql'],
-            PostgresqlDatabase: ['postgres', 'postgresql'],
-            MySQLConnectorDatabase: ['mysqlconnector'],
-            CockroachDatabase: ['cockroach', 'cockroachdb', 'crdb'],
+            SqliteDatabase: ["sqlite", "sqlite3"],
+            MySQLDatabase: ["mysql"],
+            PostgresqlDatabase: ["postgres", "postgresql"],
+            MySQLConnectorDatabase: ["mysqlconnector"],
+            CockroachDatabase: ["cockroach", "cockroachdb", "crdb"],
         }
-        engine_map = dict((alias, db) for db, aliases in engine_aliases.items()
-                          for alias in aliases)
+        engine_map = dict(
+            (alias, db) for db, aliases in engine_aliases.items() for alias in aliases
+        )
         if engine.lower() not in engine_map:
-            raise Exception('Unsupported engine: %s.' % engine)
+            raise Exception("Unsupported engine: %s." % engine)
         db_class = engine_map[engine.lower()]
-    if issubclass(db_class, SqliteDatabase) and not name.endswith('.db'):
-        name = '%s.db' % name if name != ':memory:' else name
+    if issubclass(db_class, SqliteDatabase) and not name.endswith(".db"):
+        name = "%s.db" % name if name != ":memory:" else name
     elif issubclass(db_class, MySQLDatabase):
         params.update(MYSQL_PARAMS)
     elif issubclass(db_class, CockroachDatabase):
@@ -46,31 +48,34 @@ def db_loader(engine, name='peewee_test', db_class=None, **params):
 
 
 def get_in_memory_db(**params):
-    return db_loader('sqlite3', ':memory:', thread_safe=False, **params)
+    return db_loader("sqlite3", ":memory:", thread_safe=False, **params)
 
 
-BACKEND = os.environ.get('PEEWEE_TEST_BACKEND') or 'sqlite'
-VERBOSITY = int(os.environ.get('PEEWEE_TEST_VERBOSITY') or 1)
+BACKEND = os.environ.get("PEEWEE_TEST_BACKEND") or "sqlite"
+VERBOSITY = int(os.environ.get("PEEWEE_TEST_VERBOSITY") or 1)
 
-IS_SQLITE = BACKEND in ('sqlite', 'sqlite3')
-IS_MYSQL = BACKEND in ('mysql', 'mysqlconnector')
-IS_POSTGRESQL = BACKEND in ('postgres', 'postgresql')
-IS_CRDB = BACKEND in ('cockroach', 'cockroachdb', 'crdb')
+IS_SQLITE = BACKEND in ("sqlite", "sqlite3")
+IS_MYSQL = BACKEND in ("mysql", "mysqlconnector")
+IS_POSTGRESQL = BACKEND in ("postgres", "postgresql")
+IS_CRDB = BACKEND in ("cockroach", "cockroachdb", "crdb")
 
 
 def make_db_params(key):
     params = {}
-    env_vars = [(part, 'PEEWEE_%s_%s' % (key, part.upper()))
-                for part in ('host', 'port', 'user', 'password')]
+    env_vars = [
+        (part, "PEEWEE_%s_%s" % (key, part.upper()))
+        for part in ("host", "port", "user", "password")
+    ]
     for param, env_var in env_vars:
         value = os.environ.get(env_var)
         if value:
-            params[param] = int(value) if param == 'port' else value
+            params[param] = int(value) if param == "port" else value
     return params
 
-CRDB_PARAMS = make_db_params('CRDB')
-MYSQL_PARAMS = make_db_params('MYSQL')
-PSQL_PARAMS = make_db_params('PSQL')
+
+CRDB_PARAMS = make_db_params("CRDB")
+MYSQL_PARAMS = make_db_params("MYSQL")
+PSQL_PARAMS = make_db_params("PSQL")
 
 if VERBOSITY > 1:
     handler = logging.StreamHandler()
@@ -81,7 +86,7 @@ if VERBOSITY > 2:
 
 
 def new_connection(**kwargs):
-    return db_loader(BACKEND, 'peewee_test', **kwargs)
+    return db_loader(BACKEND, "peewee_test", **kwargs)
 
 
 db = new_connection()
@@ -102,13 +107,13 @@ if IS_MYSQL:
     if server_info[0] == 8 or server_info[:2] >= (10, 2):
         IS_MYSQL_ADVANCED_FEATURES = True
     elif server_info[0] == 0:
-        logger.warning('Could not determine mysql server version.')
+        logger.warning("Could not determine mysql server version.")
     if server_info[0] == 8 or ((5, 7) <= server_info[:2] <= (6, 0)):
         # Needs actual MySQL - not MariaDB.
         IS_MYSQL_JSON = True
     db.close()
     if not IS_MYSQL_ADVANCED_FEATURES:
-        logger.warning('MySQL too old to test certain advanced features.')
+        logger.warning("MySQL too old to test certain advanced features.")
 
 if IS_CRDB:
     db.connect()
@@ -147,10 +152,10 @@ class BaseTestCase(unittest.TestCase):
         logger.removeHandler(self._qh)
 
     def assertIsNone(self, value):
-        self.assertTrue(value is None, '%r is not None' % value)
+        self.assertTrue(value is None, "%r is not None" % value)
 
     def assertIsNotNone(self, value):
-        self.assertTrue(value is not None, '%r is None' % value)
+        self.assertTrue(value is not None, "%r is None" % value)
 
     @contextmanager
     def assertRaisesCtx(self, exceptions):
@@ -158,14 +163,14 @@ class BaseTestCase(unittest.TestCase):
             yield
         except Exception as exc:
             if not isinstance(exc, exceptions):
-                raise AssertionError('Got %s, expected %s' % (exc, exceptions))
+                raise AssertionError("Got %s, expected %s" % (exc, exceptions))
         else:
-            raise AssertionError('No exception was raised.')
+            raise AssertionError("No exception was raised.")
 
     def assertSQL(self, query, sql, params=None, **state):
-        database = getattr(self, 'database', None) or db
-        state.setdefault('conflict_statement', database.conflict_statement)
-        state.setdefault('conflict_update', database.conflict_update)
+        database = getattr(self, "database", None) or db
+        state.setdefault("conflict_statement", database.conflict_statement)
+        state.setdefault("conflict_update", database.conflict_update)
         qsql, qparams = __sql__(query, **state)
         self.assertEqual(qsql, sql)
         if params is not None:
@@ -260,29 +265,37 @@ def requires_models(*models):
                         self.database.drop_tables(models)
                     except:
                         pass
+
         return inner
+
     return decorator
 
 
-def skip_if(expr, reason='n/a'):
+def skip_if(expr, reason="n/a"):
     def decorator(method):
         return unittest.skipIf(expr, reason)(method)
+
     return decorator
 
 
-def skip_unless(expr, reason='n/a'):
+def skip_unless(expr, reason="n/a"):
     def decorator(method):
         return unittest.skipUnless(expr, reason)(method)
+
     return decorator
 
+
 def requires_sqlite(method):
-    return skip_unless(IS_SQLITE, 'requires sqlite')(method)
+    return skip_unless(IS_SQLITE, "requires sqlite")(method)
+
 
 def requires_mysql(method):
-    return skip_unless(IS_MYSQL, 'requires mysql')(method)
+    return skip_unless(IS_MYSQL, "requires mysql")(method)
+
 
 def requires_postgresql(method):
-    return skip_unless(IS_POSTGRESQL, 'requires postgresql')(method)
+    return skip_unless(IS_POSTGRESQL, "requires postgresql")(method)
+
 
 def requires_pglike(method):
-    return skip_unless(IS_POSTGRESQL or IS_CRDB, 'requires pg-like')(method)
+    return skip_unless(IS_POSTGRESQL or IS_CRDB, "requires pg-like")(method)

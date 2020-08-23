@@ -12,14 +12,15 @@ class Data(TestModel):
     key = CharField()
 
     class Meta:
-        order_by = ('key',)
+        order_by = ("key",)
+
 
 class DataItem(TestModel):
-    data = ForeignKeyField(Data, backref='items')
+    data = ForeignKeyField(Data, backref="items")
     value = CharField()
 
     class Meta:
-        order_by = ('value',)
+        order_by = ("value",)
 
 
 class TestQueryCounter(ModelTestCase):
@@ -27,17 +28,17 @@ class TestQueryCounter(ModelTestCase):
 
     def test_count(self):
         with count_queries() as count:
-            Data.create(key='k1')
-            Data.create(key='k2')
+            Data.create(key="k1")
+            Data.create(key="k2")
 
         self.assertEqual(count.count, 2)
 
         with count_queries() as count:
             items = [item.key for item in Data.select().order_by(Data.key)]
-            self.assertEqual(items, ['k1', 'k2'])
+            self.assertEqual(items, ["k1", "k2"])
 
-            Data.get(Data.key == 'k1')
-            Data.get(Data.key == 'k2')
+            Data.get(Data.key == "k1")
+            Data.get(Data.key == "k2")
 
         self.assertEqual(count.count, 3)
 
@@ -47,21 +48,20 @@ class TestQueryCounter(ModelTestCase):
                 Data.create(key=str(i))
 
             items = [item.key for item in Data.select()]
-            Data.get(Data.key == '0')
-            Data.get(Data.key == '9')
+            Data.get(Data.key == "0")
+            Data.get(Data.key == "9")
 
-            Data.delete().where(
-                Data.key << ['1', '3', '5', '7', '9']).execute()
+            Data.delete().where(Data.key << ["1", "3", "5", "7", "9"]).execute()
 
             items = [item.key for item in Data.select().order_by(Data.key)]
-            self.assertEqual(items, ['0', '2', '4', '6', '8'])
+            self.assertEqual(items, ["0", "2", "4", "6", "8"])
 
         self.assertEqual(count.count, 4)
 
     def test_assert_query_count_decorator(self):
         @assert_query_count(2)
         def will_fail_under():
-            Data.create(key='x')
+            Data.create(key="x")
 
         @assert_query_count(2)
         def will_fail_over():
@@ -84,7 +84,7 @@ class TestQueryCounter(ModelTestCase):
 
         def will_fail():
             with assert_query_count(2):
-                Data.create(key='x')
+                Data.create(key="x")
 
         self.assertRaises(AssertionError, will_fail)
 
